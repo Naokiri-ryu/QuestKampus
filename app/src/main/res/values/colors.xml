@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- RPG Theme Colors -->
+    <color name="rpg_background">#121212</color>
+    <color name="rpg_card_surface">#1E1E1E</color>
+    <color name="hp_red">#FF4444</color>
+    <color name="exp_blue">#4444FF</color>
+    <color name="accent_gold">#FFD700</color>
+    <color name="text_secondary">#B0B0B0</color>
+</resources>
