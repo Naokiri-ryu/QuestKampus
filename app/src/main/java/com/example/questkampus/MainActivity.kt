@@ -27,7 +27,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var storage: FirebaseStorage
     private var statsListener: ListenerRegistration? = null
 
-    // Launcher untuk memilih gambar dari galeri
     private lateinit var imagePickerLauncher: ActivityResultLauncher<String>
     private var currentQuestId: String? = null
     private var currentQuestExp: Int = 0
@@ -37,7 +36,6 @@ class MainActivity : AppCompatActivity() {
         
         auth = FirebaseAuth.getInstance()
         
-        // Cek apakah user sudah login, jika belum lempar ke LoginActivity
         if (auth.currentUser == null) {
             startActivity(Intent(this, LoginActivity::class.java))
             finish()
@@ -87,32 +85,16 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * Fungsi untuk menambahkan Quest baru ke Firestore
-     */
     private fun addNewQuest() {
-        val questBaru = hashMapOf(
-            "title" to "Laporan Praktikum Jaringan",
-            "desc" to "Upload file laporan bab 1 sampai 3",
-            "rank" to "A",
-            "exp_reward" to 50,
-            "is_completed" to false
-        )
+                val questBaru = hashMapOf(
+                )
 
-        firestore.collection("Quests")
-            .add(questBaru)
-            .addOnSuccessListener { documentReference ->
-                Toast.makeText(this, "Tugas berhasil ditambahkan!", Toast.LENGTH_SHORT).show()
-                Log.d("Firebase", "ID Dokumen Baru: ${documentReference.id}")
-            }
-            .addOnFailureListener { e ->
-                Toast.makeText(this, "Gagal menyimpan tugas: ${e.message}", Toast.LENGTH_SHORT).show()
+                firestore.collection("Quests")
+                    .add(questBaru)
+                    }
             }
     }
 
-    /**
-     * Memulai alur penyelesaian quest: Meminta user pilih foto bukti
-     */
     fun startQuestCompletionFlow(questId: String, expReward: Int) {
         currentQuestId = questId
         currentQuestExp = expReward
@@ -166,8 +148,6 @@ class MainActivity : AppCompatActivity() {
                 binding.pbExp.progress = exp
                 
                 Log.d("MainActivity", "Stats updated: HP=$hp, EXP=$exp")
-            } else {
-                Log.d("MainActivity", "User document does not exist.")
             }
         }
     }
