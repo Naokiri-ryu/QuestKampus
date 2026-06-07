@@ -1,4 +1,12 @@
 <resources>
     <string name="app_name">Quest Kampus</string>
     <string name="default_web_client_id">487909647706-89303odp9cnchinfj91drbsvnbft63dh.apps.googleusercontent.com</string>
+
+    <!-- Rank Options untuk Spinner di dialog AddQuest -->
+    <string-array name="rank_options">
+        <item>S</item>
+        <item>A</item>
+        <item>B</item>
+        <item>C</item>
+    </string-array>
 </resources>

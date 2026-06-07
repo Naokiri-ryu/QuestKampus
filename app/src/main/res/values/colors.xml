@@ -7,7 +7,18 @@
     <color name="rpg_background">#121212</color>
     <color name="rpg_card_surface">#1E1E1E</color>
     <color name="hp_red">#FF4444</color>
-    <color name="exp_blue">#4444FF</color>
+    <color name="exp_blue">#4488FF</color>
     <color name="accent_gold">#FFD700</color>
     <color name="text_secondary">#B0B0B0</color>
+
+    <!-- Rank Badge Colors -->
+    <color name="rank_s_gold">#FFD700</color>
+    <color name="rank_a_purple">#AA44FF</color>
+    <color name="rank_b_blue">#2196F3</color>
+    <color name="rank_c_gray">#9E9E9E</color>
+
+    <!-- HP Warning Colors -->
+    <color name="hp_warning">#FF8800</color>
+    <color name="hp_danger">#FF2200</color>
+    <color name="gold_coin">#FFC107</color>
 </resources>

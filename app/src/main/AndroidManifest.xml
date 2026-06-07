@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Notifikasi (Android 13+) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -21,17 +24,10 @@
             </intent-filter>
         </activity>
 
-        <activity
-            android:name=".RegisterActivity"
-            android:exported="false" />
+        <activity android:name=".RegisterActivity" android:exported="false" />
+        <activity android:name=".MainActivity"     android:exported="false" />
+        <activity android:name=".PartyActivity"    android:exported="false" />
 
-        <activity
-            android:name=".MainActivity"
-            android:exported="false" />
-
-        <activity
-            android:name=".PartyActivity"
-            android:exported="false" />
     </application>
 
 </manifest>

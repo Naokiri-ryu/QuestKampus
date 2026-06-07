@@ -13,7 +13,6 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -47,6 +46,9 @@ dependencies {
     // Architecture Components
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.livedata.ktx)
+
+    // WorkManager (background tasks)
+    implementation(libs.androidx.work.runtime.ktx)
 
     // Firebase (using BoM)
     implementation(platform(libs.firebase.bom))
