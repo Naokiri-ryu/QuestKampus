@@ -1,5 +1,6 @@
 package com.example.questkampus
 
+import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
@@ -19,193 +20,112 @@ class PartyActivity : AppCompatActivity() {
     private lateinit var auth: FirebaseAuth
     private lateinit var firestore: FirebaseFirestore
     private var partyListener: ListenerRegistration? = null
-
-    // Max HP for a party (used in progress bar and display)
     private val PARTY_MAX_HP = 500
+    private val PREFS = "qk_prefs"
+    private val KEY_PARTY_PIN = "current_party_pin"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityPartyBinding.inflate(layoutInflater)
+        binding   = ActivityPartyBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
         auth      = FirebaseAuth.getInstance()
         firestore = FirebaseFirestore.getInstance()
-
-        // Set max on progress bar right away
         binding.pbPartyHp.max = PARTY_MAX_HP
-
         setupButtons()
-    }
 
-    // =========================================================
-    //  Button Setup
-    // =========================================================
+        // FIX: Restore party yang tersimpan
+        val savedPin = getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY_PARTY_PIN, null)
+        if (savedPin != null) listenToPartyHP(savedPin)
+    }
 
     private fun setupButtons() {
         binding.btnCreateParty.setOnClickListener {
-            val partyName = binding.etPartyName.text.toString().trim()
-            if (partyName.isEmpty()) {
-                Toast.makeText(this, "⚠ Masukkan nama party terlebih dahulu!", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-            createParty(partyName)
+            val name = binding.etPartyName.text.toString().trim()
+            if (name.isEmpty()) { Toast.makeText(this, "⚠ Masukkan nama party!", Toast.LENGTH_SHORT).show(); return@setOnClickListener }
+            createParty(name)
         }
-
         binding.btnJoinParty.setOnClickListener {
-            val pinCode = binding.etPinCode.text.toString().trim()
+            val pin = binding.etPinCode.text.toString().trim()
             when {
-                pinCode.isEmpty() ->
-                    Toast.makeText(this, "⚠ Masukkan kode PIN party!", Toast.LENGTH_SHORT).show()
-                pinCode.length != 6 ->
-                    Toast.makeText(this, "⚠ PIN harus 6 digit!", Toast.LENGTH_SHORT).show()
-                else -> joinParty(pinCode)
+                pin.isEmpty()    -> Toast.makeText(this, "⚠ Masukkan PIN!", Toast.LENGTH_SHORT).show()
+                pin.length != 6  -> Toast.makeText(this, "⚠ PIN harus 6 digit!", Toast.LENGTH_SHORT).show()
+                else             -> joinParty(pin)
             }
         }
     }
-
-    // =========================================================
-    //  Create Party
-    // =========================================================
 
     private fun createParty(partyName: String) {
-        val currentUser = auth.currentUser ?: return
+        val uid = auth.currentUser?.uid ?: return
         binding.btnCreateParty.isEnabled = false
-
-        val pinCode = (100000..999999).random().toString()
-
-        val partyData = hashMapOf(
-            "party_name" to partyName,
-            "party_hp"   to PARTY_MAX_HP,
-            "members"    to arrayListOf(currentUser.uid),
-            "pin_code"   to pinCode
-        )
-
-        firestore.collection("Parties").document(pinCode)
-            .set(partyData)
+        val pin = (100000..999999).random().toString()
+        firestore.collection("Parties").document(pin)
+            .set(hashMapOf("party_name" to partyName, "party_hp" to PARTY_MAX_HP, "members" to arrayListOf(uid), "pin_code" to pin))
             .addOnSuccessListener {
                 binding.btnCreateParty.isEnabled = true
-                Toast.makeText(
-                    this,
-                    "⚔ Party '$partyName' berhasil dibuat!\n📌 Kode PIN: $pinCode",
-                    Toast.LENGTH_LONG
-                ).show()
-                // Show pin code in UI
-                binding.tvActivePartyName.text = "⚔ $partyName"
-                binding.tvPartyPin.text        = "PIN: $pinCode"
-                binding.tvPartyPin.visibility  = View.VISIBLE
-                listenToPartyHP(pinCode)
+                Toast.makeText(this, "⚔ Party '$partyName' dibuat!\n📌 PIN: $pin", Toast.LENGTH_LONG).show()
+                savePin(pin)
+                listenToPartyHP(pin)
             }
             .addOnFailureListener { e ->
                 binding.btnCreateParty.isEnabled = true
-                Log.e("PartyActivity", "Error creating party", e)
-                Toast.makeText(this, "Gagal membuat party: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Gagal: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
 
-    // =========================================================
-    //  Join Party
-    // =========================================================
-
-    private fun joinParty(pinCode: String) {
-        val currentUser = auth.currentUser ?: return
+    private fun joinParty(pin: String) {
+        val uid = auth.currentUser?.uid ?: return
         binding.btnJoinParty.isEnabled = false
-
-        val partyRef = firestore.collection("Parties").document(pinCode)
-
-        partyRef.get()
-            .addOnSuccessListener { document ->
-                if (document.exists()) {
-                    partyRef.update("members", FieldValue.arrayUnion(currentUser.uid))
-                        .addOnSuccessListener {
-                            binding.btnJoinParty.isEnabled = true
-                            val partyName = document.getString("party_name") ?: "Party"
-                            Toast.makeText(
-                                this,
-                                "✅ Berhasil bergabung ke party '$partyName'!",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                            binding.tvActivePartyName.text = "⚔ $partyName"
-                            binding.tvPartyPin.text        = "PIN: $pinCode"
-                            binding.tvPartyPin.visibility  = View.VISIBLE
-                            listenToPartyHP(pinCode)
-                        }
-                        .addOnFailureListener { e ->
-                            binding.btnJoinParty.isEnabled = true
-                            Log.e("PartyActivity", "Error joining party", e)
-                            Toast.makeText(this, "Gagal bergabung: ${e.message}", Toast.LENGTH_SHORT).show()
-                        }
-                } else {
+        val ref = firestore.collection("Parties").document(pin)
+        ref.get().addOnSuccessListener { doc ->
+            if (doc.exists()) {
+                ref.update("members", FieldValue.arrayUnion(uid)).addOnSuccessListener {
                     binding.btnJoinParty.isEnabled = true
-                    Toast.makeText(
-                        this,
-                        "❌ Party dengan PIN '$pinCode' tidak ditemukan!",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    Toast.makeText(this, "✅ Bergabung ke '${doc.getString("party_name")}'!", Toast.LENGTH_SHORT).show()
+                    savePin(pin)
+                    listenToPartyHP(pin)
+                }.addOnFailureListener { e ->
+                    binding.btnJoinParty.isEnabled = true
+                    Toast.makeText(this, "Gagal: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
-            }
-            .addOnFailureListener { e ->
+            } else {
                 binding.btnJoinParty.isEnabled = true
-                Log.e("PartyActivity", "Error fetching party", e)
-                Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "❌ Party PIN '$pin' tidak ditemukan!", Toast.LENGTH_SHORT).show()
             }
+        }.addOnFailureListener { e ->
+            binding.btnJoinParty.isEnabled = true
+            Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
     }
 
-    // =========================================================
-    //  Real-time Party HP Listener
-    // =========================================================
-
-    private fun listenToPartyHP(pinCode: String) {
-        // Show the party status card
+    private fun listenToPartyHP(pin: String) {
         binding.cvPartyStatus.visibility = View.VISIBLE
-
-        partyListener?.remove() // Remove any previous listener
-
-        partyListener = firestore.collection("Parties").document(pinCode)
-            .addSnapshotListener { snapshot, e ->
-                if (e != null) {
-                    Log.w("PartyActivity", "Party listen failed.", e)
-                    return@addSnapshotListener
-                }
-
-                if (snapshot != null && snapshot.exists()) {
-                    val hp        = snapshot.getLong("party_hp")?.toInt()  ?: 0
-                    val partyName = snapshot.getString("party_name") ?: "Party"
-                    val members   = snapshot.get("members") as? List<*>
-                    val memberCount = members?.size ?: 0
-
-                    // Update UI
-                    binding.tvActivePartyName.text = "⚔ $partyName"
-                    binding.pbPartyHp.max          = PARTY_MAX_HP
+        partyListener?.remove()
+        partyListener = firestore.collection("Parties").document(pin)
+            .addSnapshotListener { snap, e ->
+                if (e != null) { Log.w("PartyActivity", "Listen failed", e); return@addSnapshotListener }
+                if (snap != null && snap.exists()) {
+                    val hp    = snap.getLong("party_hp")?.toInt() ?: 0
+                    val name  = snap.getString("party_name") ?: "Party"
+                    val count = (snap.get("members") as? List<*>)?.size ?: 0
+                    binding.tvActivePartyName.text = "⚔ $name"
+                    binding.tvPartyPin.text        = "PIN: $pin"
+                    binding.tvPartyPin.visibility  = View.VISIBLE
+                    binding.tvMemberCount.text     = "👥 $count Anggota"
                     binding.pbPartyHp.progress     = hp
                     binding.tvPartyHpValue.text    = "$hp / $PARTY_MAX_HP"
-                    binding.tvMemberCount.text     = "👥 $memberCount Anggota"
-
-                    // HP bar color changes with HP level
-                    val hpPercent = hp.toFloat() / PARTY_MAX_HP.toFloat()
-                    val hpColor   = when {
-                        hpPercent <= 0.25f -> Color.parseColor("#FF2200")
-                        hpPercent <= 0.50f -> Color.parseColor("#FF8800")
-                        else               -> Color.parseColor("#FF4444")
-                    }
-                    binding.pbPartyHp.progressTintList = ColorStateList.valueOf(hpColor)
-
-                    if (hp <= 0) {
-                        Toast.makeText(
-                            this,
-                            "💀 HP Party habis! Ayo selesaikan tugas lebih cepat!",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
+                    val hpPct = hp.toFloat() / PARTY_MAX_HP
+                    binding.pbPartyHp.progressTintList = ColorStateList.valueOf(when {
+                        hpPct <= 0.25f -> Color.parseColor("#FF2200")
+                        hpPct <= 0.50f -> Color.parseColor("#FF8800")
+                        else           -> Color.parseColor("#FF4444")
+                    })
+                    if (hp <= 0) Toast.makeText(this, "💀 HP Party habis!", Toast.LENGTH_LONG).show()
                 }
             }
     }
 
-    // =========================================================
-    //  Lifecycle
-    // =========================================================
+    private fun savePin(pin: String) =
+        getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString(KEY_PARTY_PIN, pin).apply()
 
-    override fun onDestroy() {
-        super.onDestroy()
-        partyListener?.remove()
-    }
+    override fun onDestroy() { super.onDestroy(); partyListener?.remove() }
 }

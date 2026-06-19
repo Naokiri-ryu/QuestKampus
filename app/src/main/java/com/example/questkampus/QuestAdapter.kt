@@ -1,9 +1,13 @@
 package com.example.questkampus
 
+import android.content.Context
+import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Paint
+import android.net.Uri
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
@@ -18,40 +22,70 @@ class QuestAdapter(
     private val onQuestCompleted: (Quest) -> Unit
 ) : RecyclerView.Adapter<QuestAdapter.QuestViewHolder>() {
 
-    // =========================================================
-    //  ViewHolder
-    // =========================================================
-
     inner class QuestViewHolder(val binding: ItemQuestBinding) :
         RecyclerView.ViewHolder(binding.root)
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): QuestViewHolder {
-        val binding = ItemQuestBinding.inflate(
-            LayoutInflater.from(parent.context), parent, false
-        )
-        return QuestViewHolder(binding)
-    }
-
-    // =========================================================
-    //  Bind Data
-    // =========================================================
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): QuestViewHolder =
+        QuestViewHolder(ItemQuestBinding.inflate(LayoutInflater.from(parent.context), parent, false))
 
     override fun onBindViewHolder(holder: QuestViewHolder, position: Int) {
         val quest = questList[position]
         val b     = holder.binding
+        val ctx   = holder.itemView.context
+
+        // --- Rank Badge ---
+        b.tvQuestRank.text = quest.rank
+        b.tvQuestRank.background = ctx.getDrawable(when(quest.rank) {
+            "S"  -> R.drawable.bg_rank_s
+            "A"  -> R.drawable.bg_rank_a
+            "B"  -> R.drawable.bg_rank_b
+            else -> R.drawable.bg_rank_c
+        })
+        b.tvQuestRank.setTextColor(if (quest.rank == "C") Color.WHITE else Color.BLACK)
 
         // --- Title ---
         b.tvQuestTitle.text = quest.title
 
-        // --- Rank Badge ---
-        b.tvQuestRank.text = quest.rank
-        b.tvQuestRank.backgroundTintList = ColorStateList.valueOf(getRankColor(quest.rank))
-        b.tvQuestRank.setTextColor(if (quest.rank == "C") Color.WHITE else Color.BLACK)
+        // --- RPG Flavor ---
+        b.tvQuestFlavor.text = "${RpgTheme.rankIcon(quest.rank)} ${RpgTheme.rankTitle(quest.rank)}"
 
         // --- Deadline ---
         bindDeadline(b.tvQuestDeadline, quest)
 
-        // --- Completed / Failed visual state ---
+        // --- Support link ---
+        if (quest.support_link.isNotEmpty()) {
+            b.tvSupportLink.visibility = View.VISIBLE
+            b.tvSupportLink.text = "🔗 File Soal/Pendukung"
+            b.tvSupportLink.setOnClickListener {
+                ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(quest.support_link)))
+            }
+        } else if (quest.support_file_url.isNotEmpty()) {
+            b.tvSupportLink.visibility = View.VISIBLE
+            b.tvSupportLink.text = "📁 Lihat File Soal"
+            b.tvSupportLink.setOnClickListener {
+                ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(quest.support_file_url)))
+            }
+        } else {
+            b.tvSupportLink.visibility = View.GONE
+        }
+
+        // --- Proof indicator (setelah selesai) ---
+        if (quest.is_completed) {
+            val proofUrl = quest.proof_link.ifEmpty { quest.attachment_url }
+            if (proofUrl.isNotEmpty()) {
+                b.tvProofIndicator.visibility = View.VISIBLE
+                b.tvProofIndicator.text = "📎 Lihat Bukti Penyelesaian"
+                b.tvProofIndicator.setOnClickListener {
+                    ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(proofUrl)))
+                }
+            } else {
+                b.tvProofIndicator.visibility = View.GONE
+            }
+        } else {
+            b.tvProofIndicator.visibility = View.GONE
+        }
+
+        // --- State: selesai / gagal / aktif ---
         when {
             quest.is_completed -> {
                 b.tvQuestTitle.paintFlags = b.tvQuestTitle.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
@@ -76,7 +110,7 @@ class QuestAdapter(
             }
         }
 
-        // --- Checkbox listener ---
+        // --- Checkbox ---
         b.cbQuestDone.setOnCheckedChangeListener(null)
         b.cbQuestDone.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked && !quest.is_completed && !quest.is_failed) {
@@ -85,64 +119,29 @@ class QuestAdapter(
         }
     }
 
-    // =========================================================
-    //  Deadline display
-    // =========================================================
-
     private fun bindDeadline(tv: TextView, quest: Quest) {
         if (quest.deadline <= 0L) {
-            tv.text = "Tidak ada deadline"
-            tv.setTextColor(Color.parseColor("#888888"))
-            return
+            tv.text = "Tidak ada deadline"; tv.setTextColor(Color.parseColor("#888888")); return
         }
-
-        val now       = System.currentTimeMillis()
-        val sdf       = SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault())
-        val formatted = sdf.format(Date(quest.deadline))
-
+        val now = System.currentTimeMillis()
+        val sdf = SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault())
+        val fmt = sdf.format(Date(quest.deadline))
         when {
-            quest.is_completed -> {
-                tv.text = "✅ Selesai · $formatted"
-                tv.setTextColor(Color.parseColor("#4CAF50"))
-            }
-            quest.is_failed -> {
-                tv.text = "💀 Gagal · $formatted"
-                tv.setTextColor(Color.parseColor("#FF4444"))
-            }
+            quest.is_completed -> { tv.text = "✅ Selesai · $fmt"; tv.setTextColor(Color.parseColor("#4CAF50")) }
+            quest.is_failed    -> { tv.text = "💀 Gagal · $fmt";   tv.setTextColor(Color.parseColor("#FF4444")) }
             now > quest.deadline -> {
-                val overdueMins = TimeUnit.MILLISECONDS.toMinutes(now - quest.deadline)
-                tv.text = "⚠ Terlambat ${overdueMins}m · $formatted"
+                tv.text = "⚠ Terlambat ${TimeUnit.MILLISECONDS.toMinutes(now - quest.deadline)}m · $fmt"
                 tv.setTextColor(Color.parseColor("#FF4444"))
             }
             else -> {
-                val remaining = quest.deadline - now
-                val days  = TimeUnit.MILLISECONDS.toDays(remaining)
-                val hours = TimeUnit.MILLISECONDS.toHours(remaining) % 24
-                val mins  = TimeUnit.MILLISECONDS.toMinutes(remaining) % 60
-
-                val timeLabel = when {
-                    days  > 0 -> "Sisa $days hari"
-                    hours > 0 -> "Sisa ${hours}j ${mins}m"
-                    else      -> "Sisa ${mins} menit"
-                }
-                tv.text = "📅 $formatted · $timeLabel"
-                tv.setTextColor(
-                    if (days == 0L && hours < 3) Color.parseColor("#FF8800")
-                    else Color.parseColor("#B0B0B0")
-                )
+                val r = quest.deadline - now
+                val d = TimeUnit.MILLISECONDS.toDays(r)
+                val h = TimeUnit.MILLISECONDS.toHours(r) % 24
+                val m = TimeUnit.MILLISECONDS.toMinutes(r) % 60
+                tv.text = "📅 $fmt · ${if (d > 0) "Sisa $d hari" else if (h > 0) "Sisa ${h}j ${m}m" else "Sisa ${m}m"}"
+                tv.setTextColor(if (d == 0L && h < 3) Color.parseColor("#FF8800") else Color.parseColor("#B0B0B0"))
             }
         }
-    }
-
-    // =========================================================
-    //  Helpers
-    // =========================================================
-
-    private fun getRankColor(rank: String): Int = when (rank) {
-        "S"  -> Color.parseColor("#FFD700")
-        "A"  -> Color.parseColor("#AA44FF")
-        "B"  -> Color.parseColor("#2196F3")
-        else -> Color.parseColor("#757575")
     }
 
     override fun getItemCount() = questList.size
@@ -152,10 +151,7 @@ class QuestAdapter(
         notifyDataSetChanged()
     }
 
-    /** Untuk swipe-to-delete: ambil quest berdasarkan posisi */
     fun getQuestAt(position: Int): Quest = questList[position]
 
-    /** Untuk MainActivity: cari rank berdasarkan quest ID */
-    fun getRankForId(questId: String): String? =
-        questList.find { it.id == questId }?.rank
+    fun getRankForId(questId: String): String? = questList.find { it.id == questId }?.rank
 }

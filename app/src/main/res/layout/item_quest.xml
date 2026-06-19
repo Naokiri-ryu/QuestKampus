@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="12dp"
-    android:layout_marginVertical="6dp"
+    android:layout_marginVertical="5dp"
     app:cardBackgroundColor="@color/rpg_card_surface"
     app:cardCornerRadius="12dp"
     app:cardElevation="4dp"
@@ -15,54 +15,92 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="14dp">
+        android:padding="12dp">
 
-        <!-- Rank Badge (oval, colored by rank) -->
+        <!-- Rank Badge -->
         <TextView
             android:id="@+id/tv_quest_rank"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:background="@drawable/bg_rank_badge"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/bg_rank_c"
             android:gravity="center"
-            android:text="S"
-            android:textColor="@color/black"
+            android:text="C"
+            android:textColor="@color/white"
             android:textSize="16sp"
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="A" />
+            app:layout_constraintTop_toTopOf="parent" />
 
         <!-- Quest Title -->
         <TextView
             android:id="@+id/tv_quest_title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
+            android:layout_marginStart="10dp"
             android:layout_marginEnd="8dp"
             android:text="Judul Quest"
             android:textColor="@color/white"
-            android:textSize="16sp"
+            android:textSize="15sp"
             android:textStyle="bold"
             app:layout_constraintEnd_toStartOf="@id/cb_quest_done"
             app:layout_constraintStart_toEndOf="@id/tv_quest_rank"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="Mengerjakan Tugas Besar PBO" />
+            app:layout_constraintTop_toTopOf="parent" />
 
-        <!-- Deadline text -->
+        <!-- RPG Flavor / Quest type -->
+        <TextView
+            android:id="@+id/tv_quest_flavor"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="🌿 Misi Pencarian"
+            android:textColor="@color/text_secondary"
+            android:textSize="11sp"
+            app:layout_constraintEnd_toEndOf="@id/tv_quest_title"
+            app:layout_constraintStart_toStartOf="@id/tv_quest_title"
+            app:layout_constraintTop_toBottomOf="@id/tv_quest_title" />
+
+        <!-- Deadline -->
         <TextView
             android:id="@+id/tv_quest_deadline"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="3dp"
             android:text="📅 Deadline: -"
             android:textColor="@color/text_secondary"
-            android:textSize="12sp"
+            android:textSize="11sp"
             app:layout_constraintEnd_toEndOf="@id/tv_quest_title"
             app:layout_constraintStart_toStartOf="@id/tv_quest_title"
-            app:layout_constraintTop_toBottomOf="@id/tv_quest_title"
-            tools:text="📅 20 Des 2025, 23:59 · Sisa 2 hari" />
+            app:layout_constraintTop_toBottomOf="@id/tv_quest_flavor" />
 
-        <!-- Complete Checkbox -->
+        <!-- Link pendukung (tampil hanya jika ada) -->
+        <TextView
+            android:id="@+id/tv_support_link"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text=""
+            android:textColor="@color/exp_blue"
+            android:textSize="11sp"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="@id/tv_quest_title"
+            app:layout_constraintStart_toStartOf="@id/tv_quest_title"
+            app:layout_constraintTop_toBottomOf="@id/tv_quest_deadline" />
+
+        <!-- Bukti (tampil saat selesai) -->
+        <TextView
+            android:id="@+id/tv_proof_indicator"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text=""
+            android:textColor="#4CAF50"
+            android:textSize="11sp"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="@id/tv_quest_title"
+            app:layout_constraintStart_toStartOf="@id/tv_quest_title"
+            app:layout_constraintTop_toBottomOf="@id/tv_support_link" />
+
+        <!-- Checkbox selesai -->
         <CheckBox
             android:id="@+id/cb_quest_done"
             android:layout_width="wrap_content"
@@ -73,5 +111,4 @@
             app:layout_constraintTop_toTopOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-
 </com.google.android.material.card.MaterialCardView>
