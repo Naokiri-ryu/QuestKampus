@@ -27,6 +27,7 @@
         <activity android:name=".MainActivity"     android:exported="false" />
         <activity android:name=".PartyActivity"    android:exported="false" />
         <activity android:name=".QuestDetailActivity" android:exported="false" />
+        <activity android:name=".PartyDetailActivity" android:exported="false" />
 
     </application>
 

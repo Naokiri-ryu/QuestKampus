@@ -42,7 +42,6 @@ class QuestDetailActivity : AppCompatActivity() {
         firestore = FirebaseFirestore.getInstance()
         storage = FirebaseStorage.getInstance()
         auth = FirebaseAuth.getInstance()
-
         questId = intent.getStringExtra("QUEST_ID")
 
         setupToolbar()
@@ -65,13 +64,15 @@ class QuestDetailActivity : AppCompatActivity() {
         binding.btnSaveQuest.setOnClickListener { saveQuestChanges() }
         binding.btnCompleteQuest.setOnClickListener { showSubmissionDialog() }
         binding.btnEditDeadline.setOnClickListener { showDeadlinePicker() }
+
+        // --- TAMBAHAN TOMBOL AMBIL MISI ---
+        binding.btnTakeQuest.setOnClickListener { takePartyQuest() }
     }
 
     private fun loadQuestDetails() {
         val qId = questId ?: return
         firestore.collection("Quests").document(qId).addSnapshotListener { snapshot, e ->
             if (e != null || snapshot == null || !snapshot.exists()) return@addSnapshotListener
-
             val quest = snapshot.toObject(Quest::class.java) ?: return@addSnapshotListener
             currentQuest = quest
             displayQuest(quest)
@@ -79,14 +80,16 @@ class QuestDetailActivity : AppCompatActivity() {
     }
 
     private fun displayQuest(quest: Quest) {
+        val currentUserUid = auth.currentUser?.uid ?: ""
+
         binding.etDetailTitle.setText(quest.title)
         binding.etDetailDesc.setText(quest.desc)
         binding.tvDetailRank.text = "RANK ${quest.rank}"
-        selectedDeadline = quest.deadline
 
+        selectedDeadline = quest.deadline
         val sdf = SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault())
         binding.tvDetailDeadline.text = "📅 Deadline: ${if (quest.deadline > 0) sdf.format(Date(quest.deadline)) else "-"}"
-        binding.tvDetailReward.text = "💰 Reward: ${quest.exp_reward} EXP, ${quest.getGoldReward()} Gold"
+        binding.tvDetailReward.text = "🎁 Reward: ${quest.exp_reward} EXP, ${quest.getGoldReward()} Gold"
 
         // Handle Status & UI Visibility
         when {
@@ -113,7 +116,41 @@ class QuestDetailActivity : AppCompatActivity() {
                 binding.tvDetailStatus.setTextColor(resources.getColor(R.color.accent_gold))
                 binding.layoutActions.visibility = View.VISIBLE
                 binding.tvStatusFooter.visibility = View.GONE
-                enableEditing()
+
+                // ==========================================
+                // LOGIKA MULTIPLAYER: TUGAS PRIBADI VS KELOMPOK
+                // ==========================================
+                if (quest.party_id.isNotEmpty()) {
+                    // INI TUGAS KELOMPOK
+                    disableEditing() // Tidak boleh edit judul/deadline sembarangan
+                    binding.btnSaveQuest.visibility = View.GONE
+
+                    if (quest.assigned_to.isEmpty()) {
+                        // Belum ada yang ambil
+                        binding.btnTakeQuest.visibility = View.VISIBLE
+                        binding.btnCompleteQuest.visibility = View.GONE
+                        binding.tvAssignedTo.visibility = View.GONE
+                    } else if (quest.assigned_to == currentUserUid) {
+                        // Diambil oleh diri sendiri
+                        binding.btnTakeQuest.visibility = View.GONE
+                        binding.btnCompleteQuest.visibility = View.VISIBLE
+                        binding.tvAssignedTo.text = "Misi ini sedang kamu kerjakan"
+                        binding.tvAssignedTo.visibility = View.VISIBLE
+                    } else {
+                        // Diambil oleh orang lain
+                        binding.btnTakeQuest.visibility = View.GONE
+                        binding.btnCompleteQuest.visibility = View.GONE
+                        binding.tvAssignedTo.text = "Sedang dikerjakan oleh anggota lain"
+                        binding.tvAssignedTo.visibility = View.VISIBLE
+                    }
+                } else {
+                    // INI TUGAS PRIBADI
+                    enableEditing()
+                    binding.btnSaveQuest.visibility = View.VISIBLE
+                    binding.btnTakeQuest.visibility = View.GONE
+                    binding.btnCompleteQuest.visibility = View.VISIBLE
+                    binding.tvAssignedTo.visibility = View.GONE
+                }
             }
         }
 
@@ -162,10 +199,28 @@ class QuestDetailActivity : AppCompatActivity() {
         binding.btnEditDeadline.visibility = View.VISIBLE
     }
 
+    // --- FUNGSI AMBIL MISI KELOMPOK ---
+    private fun takePartyQuest() {
+        val qId = questId ?: return
+        val uid = auth.currentUser?.uid ?: return
+
+        binding.loadingIndicator.visibility = View.VISIBLE
+        firestore.collection("Quests").document(qId)
+            .update("assigned_to", uid)
+            .addOnSuccessListener {
+                binding.loadingIndicator.visibility = View.GONE
+                Toast.makeText(this, "Misi berhasil diambil! Selamat berjuang!", Toast.LENGTH_SHORT).show()
+            }
+            .addOnFailureListener {
+                binding.loadingIndicator.visibility = View.GONE
+                Toast.makeText(this, "Gagal mengambil misi", Toast.LENGTH_SHORT).show()
+            }
+    }
+
     private fun showDeadlinePicker() {
         val cal = Calendar.getInstance()
         if (selectedDeadline > 0) cal.timeInMillis = selectedDeadline
-        
+
         DatePickerDialog(this, { _, y, m, d ->
             cal.set(y, m, d)
             TimePickerDialog(this, { _, h, min ->
@@ -183,18 +238,12 @@ class QuestDetailActivity : AppCompatActivity() {
         val qId = questId ?: return
         val newTitle = binding.etDetailTitle.text.toString().trim()
         val newDesc = binding.etDetailDesc.text.toString().trim()
-
         if (newTitle.isEmpty()) {
             Toast.makeText(this, "Judul tidak boleh kosong", Toast.LENGTH_SHORT).show()
             return
         }
-
         binding.loadingIndicator.visibility = View.VISIBLE
-        val updates = mapOf(
-            "title" to newTitle,
-            "desc" to newDesc,
-            "deadline" to selectedDeadline
-        )
+        val updates = mapOf("title" to newTitle, "desc" to newDesc, "deadline" to selectedDeadline)
 
         firestore.collection("Quests").document(qId).update(updates)
             .addOnSuccessListener {
@@ -259,9 +308,34 @@ class QuestDetailActivity : AppCompatActivity() {
         )
 
         firestore.runTransaction { transaction ->
+            // ==========================================
+            // ATURAN FIRESTORE: SEMUA "READ" (get) HARUS DI ATAS!
+            // ==========================================
+
+            // Read 1: Data User
             val userRef = firestore.collection("Users").document(uid)
             val userSnap = transaction.get(userRef)
 
+            // Read 2: Data Kelompok (jika ini misi kelompok)
+            var partyHpToUpdate: Int? = null
+            val partyRef = if (quest.party_id.isNotEmpty()) firestore.collection("Parties").document(quest.party_id) else null
+
+            if (partyRef != null) {
+                val partySnap = transaction.get(partyRef)
+                if (partySnap.exists()) {
+                    val curPartyHp = partySnap.getLong("party_hp") ?: 500L
+                    val maxPartyHp = partySnap.getLong("max_hp") ?: 500L
+                    val healAmount = quest.getHealAmount()
+                    // Hitung HP yang baru tanpa melebihi batas maksimal
+                    partyHpToUpdate = minOf(maxPartyHp.toInt(), (curPartyHp + healAmount).toInt())
+                }
+            }
+
+            // ==========================================
+            // SETELAH READ SELESAI, BARU LAKUKAN "WRITE" (update)
+            // ==========================================
+
+            // Write 1: UPDATE STATS PEMAIN (PERSONAL)
             val curExp = userSnap.getLong("exp") ?: 0L
             val curGold = userSnap.getLong("gold") ?: 0L
             val curLevel = userSnap.getLong("level")?.toInt() ?: 1
@@ -273,20 +347,24 @@ class QuestDetailActivity : AppCompatActivity() {
             val healAmount = quest.getHealAmount()
             val newHp = minOf(maxHp, curHp + healAmount)
 
-            // Level Up logic
-            val maxExp = RpgTheme.maxExpForLevel(curLevel)
-            if (newExp >= maxExp) {
+            val maxExpThreshold = RpgTheme.maxExpForLevel(curLevel)
+            if (newExp >= maxExpThreshold) {
                 transaction.update(userRef, "level", curLevel + 1)
-                transaction.update(userRef, "exp", newExp - maxExp)
+                transaction.update(userRef, "exp", newExp - maxExpThreshold)
                 transaction.update(userRef, "maxExp", RpgTheme.maxExpForLevel(curLevel + 1))
             } else {
                 transaction.update(userRef, "exp", newExp)
             }
-
             transaction.update(userRef, "gold", newGold)
             transaction.update(userRef, "hp", newHp)
+
+            // Write 2: TANDAI MISI SELESAI
             transaction.update(firestore.collection("Quests").document(qId), questUpdates)
 
+            // Write 3: JIKA INI MISI KELOMPOK, UPDATE HP KELOMPOK
+            if (partyRef != null && partyHpToUpdate != null) {
+                transaction.update(partyRef, "party_hp", partyHpToUpdate)
+            }
             null
         }.addOnSuccessListener {
             binding.loadingIndicator.visibility = View.GONE

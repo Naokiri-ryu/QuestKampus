@@ -1,25 +1,41 @@
 package com.example.questkampus
 
 import com.google.firebase.firestore.DocumentId
+import com.google.firebase.firestore.PropertyName
 
 data class Quest(
     @DocumentId val id: String = "",
-    val title: String = "",
-    val desc: String = "",
-    val rank: String = "C",
-    val exp_reward: Int = 0,
-    val is_completed: Boolean = false,
-    val is_failed: Boolean = false,
-    val creator_id: String = "",
-    val deadline: Long = 0L,
-    val attachment_url: String = "", // Bukti upload (legacy/alias)
-    val support_link: String = "",
-    val support_file_url: String = "",
-    val proof_link: String = "",
-    val proof_type: String = "image",
-    val penalty_applied: Boolean = false // Mencegah pengurangan HP berulang
+    var title: String = "",
+    var desc: String = "",
+    var rank: String = "C",
+    var exp_reward: Int = 0,
+
+    // Paksa Firebase menggunakan nama persis seperti di bawah ini
+    @get:PropertyName("is_completed")
+    @set:PropertyName("is_completed")
+    var is_completed: Boolean = false,
+
+    @get:PropertyName("is_failed")
+    @set:PropertyName("is_failed")
+    var is_failed: Boolean = false,
+
+    var creator_id: String = "",
+    var deadline: Long = 0L,
+    var attachment_url: String = "",
+    var support_link: String = "",
+    var support_file_url: String = "",
+    var proof_link: String = "",
+    var proof_type: String = "image",
+    var penalty_applied: Boolean = false,
+
+    // ==========================================
+    // TAMBAHAN UNTUK FITUR KELOMPOK (MULTIPLAYER)
+    // ==========================================
+    var party_id: String = "",
+    var assigned_to: String = ""
+
 ) {
-    // Helper untuk mendapatkan reward gold (logic dipindah ke sini agar konsisten)
+    // Helper untuk mendapatkan reward gold
     fun getGoldReward(): Int = when(rank.uppercase()) {
         "S" -> 100
         "A" -> 60

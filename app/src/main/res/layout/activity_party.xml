@@ -1,219 +1,82 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/rpg_background"
-    tools:context=".PartyActivity">
+    android:background="@color/rpg_background">
 
-    <LinearLayout
+    <!-- App Bar / Toolbar -->
+    <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:background="@color/rpg_background">
 
-        <!-- Title -->
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:title="Guild &amp; Kelompok"
+            app:titleTextColor="@color/accent_gold"
+            app:navigationIcon="@android:drawable/ic_menu_revert" />
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <!-- Pesan jika belum punya kelompok -->
         <TextView
+            android:id="@+id/tv_empty_party"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp"
+            android:text="Kamu belum bergabung dengan kelompok manapun.\n\nTekan tombol di bawah untuk Memulai!"
             android:gravity="center"
-            android:text="⚔ PARTY SYSTEM"
-            android:textColor="@color/accent_gold"
-            android:textSize="24sp"
-            android:textStyle="bold" />
+            android:textColor="@color/text_secondary"
+            android:textSize="16sp"
+            android:visibility="gone"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
 
-        <!-- ====== Create Party Card ====== -->
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/cv_create"
+        <!-- Daftar Kelompok -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_parties"
             android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingTop="8dp"
+            android:paddingBottom="100dp" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Tombol Mengambang (Floating Action Buttons) -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="16dp"
+        android:gravity="end">
+
+        <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+            android:id="@+id/fab_join_party"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            app:cardBackgroundColor="@color/rpg_card_surface"
-            app:cardCornerRadius="12dp"
-            app:strokeColor="@color/accent_gold"
-            app:strokeWidth="1dp">
+            android:text="GABUNG PIN"
+            app:icon="@android:drawable/ic_menu_search"
+            android:textColor="@color/white"
+            app:backgroundTint="@color/exp_blue" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="12dp"
-                    android:text="🛡 Buat Party Baru"
-                    android:textColor="@color/white"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
-
-                <com.google.android.material.textfield.TextInputLayout
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Nama Party"
-                    android:textColorHint="@color/text_secondary"
-                    app:boxStrokeColor="@color/accent_gold"
-                    app:hintTextColor="@color/accent_gold">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/et_party_name"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="text"
-                        android:textColor="@color/white" />
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <Button
-                    android:id="@+id/btn_create_party"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:backgroundTint="@color/accent_gold"
-                    android:text="BUAT PARTY"
-                    android:textColor="@color/black"
-                    android:textStyle="bold" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- ====== Join Party Card ====== -->
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/cv_join"
-            android:layout_width="match_parent"
+        <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+            android:id="@+id/fab_create_party"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp"
-            app:cardBackgroundColor="@color/rpg_card_surface"
-            app:cardCornerRadius="12dp"
-            app:strokeColor="@color/exp_blue"
-            app:strokeWidth="1dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="12dp"
-                    android:text="🔗 Bergabung ke Party"
-                    android:textColor="@color/white"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
-
-                <com.google.android.material.textfield.TextInputLayout
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Masukkan 6-digit PIN"
-                    android:textColorHint="@color/text_secondary"
-                    app:boxStrokeColor="@color/exp_blue"
-                    app:hintTextColor="@color/exp_blue">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/et_pin_code"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="number"
-                        android:maxLength="6"
-                        android:textColor="@color/white" />
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <Button
-                    android:id="@+id/btn_join_party"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:backgroundTint="@color/exp_blue"
-                    android:text="GABUNG PARTY"
-                    android:textColor="@color/white"
-                    android:textStyle="bold" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- ====== Party Status Card (hidden until join/create) ====== -->
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/cv_party_status"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:visibility="gone"
-            app:cardBackgroundColor="@color/rpg_card_surface"
-            app:cardCornerRadius="12dp"
-            app:strokeColor="@color/hp_red"
-            app:strokeWidth="2dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <!-- Party Name -->
-                <TextView
-                    android:id="@+id/tv_active_party_name"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="⚔ Party Name"
-                    android:textColor="@color/white"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
-
-                <!-- PIN display -->
-                <TextView
-                    android:id="@+id/tv_party_pin"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:text="PIN: ------"
-                    android:textColor="@color/accent_gold"
-                    android:textSize="13sp"
-                    android:visibility="gone" />
-
-                <!-- Member count -->
-                <TextView
-                    android:id="@+id/tv_member_count"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="👥 0 Anggota"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="13sp" />
-
-                <!-- HP Label -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:layout_marginBottom="4dp"
-                    android:text="PARTY HP"
-                    android:textColor="@color/hp_red"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
-
-                <ProgressBar
-                    android:id="@+id/pb_party_hp"
-                    style="@style/Widget.AppCompat.ProgressBar.Horizontal"
-                    android:layout_width="match_parent"
-                    android:layout_height="20dp"
-                    android:max="500"
-                    android:progress="500"
-                    android:progressTint="@color/hp_red" />
-
-                <TextView
-                    android:id="@+id/tv_party_hp_value"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:gravity="end"
-                    android:text="500 / 500"
-                    android:textColor="@color/white"
-                    android:textSize="13sp" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
+            android:text="BUAT KELOMPOK"
+            app:icon="@android:drawable/ic_input_add"
+            android:textColor="@color/black"
+            app:backgroundTint="@color/accent_gold" />
     </LinearLayout>
-</ScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

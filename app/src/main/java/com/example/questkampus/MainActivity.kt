@@ -66,6 +66,13 @@ class MainActivity : AppCompatActivity() {
     private var currentFilter = "all"
     private var pendingSupportFileUri: Uri? = null
 
+    // ---TOKO & BURNOUT ---
+    private var currentPlayerGold: Int = 0
+    private var currentPlayerHp: Int = 0
+    private var currentPlayerMaxHp: Int = 100
+    private var isBurnoutDialogShowing = false
+    // --------------------------------------------------
+
     private val TIPS = listOf(
         "🐉 Quest Rank S = Boss Fight. Reward EXP & Gold terbanyak!",
         "⚔️ Selesaikan quest sebelum deadline agar HP tidak berkurang.",
@@ -143,6 +150,8 @@ class MainActivity : AppCompatActivity() {
         }
         binding.btnParty.setOnClickListener { startActivity(Intent(this, PartyActivity::class.java)) }
         binding.cvProfile.setOnClickListener { imagePickerLauncher.launch("image/*") }
+
+        setupShopButton()
     }
 
     private fun setupBottomNav() {
@@ -245,20 +254,24 @@ class MainActivity : AppCompatActivity() {
                 if (e != null || snap == null || !snap.exists()) return@addSnapshotListener
                 val name   = snap.getString("name")        ?: "Hero"
                 val level  = snap.getLong("level")?.toInt()  ?: 1
-                val hp     = snap.getLong("hp")?.toInt()     ?: 100
-                val maxHp  = snap.getLong("maxHp")?.toInt()  ?: 100
+
+                // --- UPDATE VARIABEL GLOBAL ---
+                currentPlayerHp     = snap.getLong("hp")?.toInt()     ?: 100
+                currentPlayerMaxHp  = snap.getLong("maxHp")?.toInt()  ?: 100
+                currentPlayerGold   = snap.getLong("gold")?.toInt()   ?: 0
+                // ------------------------------
+
                 val exp    = snap.getLong("exp")?.toInt()    ?: 0
                 val maxExp = snap.getLong("maxExp")?.toInt() ?: RpgTheme.maxExpForLevel(level)
-                val gold   = snap.getLong("gold")?.toInt()   ?: 0
                 val avatar = snap.getString("avatar_url")    ?: ""
 
                 binding.tvPlayerName.text  = name
                 binding.tvPlayerLevel.text = "⚔ Level $level"
-                binding.tvPlayerGold.text  = "🪙 $gold"
-                binding.pbHp.max  = maxHp;  binding.pbHp.progress  = hp
+                binding.tvPlayerGold.text  = "🪙 $currentPlayerGold" // Menggunakan variabel global
+                binding.pbHp.max  = currentPlayerMaxHp;  binding.pbHp.progress  = currentPlayerHp
                 binding.pbExp.max = maxExp; binding.pbExp.progress = exp
 
-                val hpPct = hp.toFloat() / maxHp.toFloat()
+                val hpPct = currentPlayerHp.toFloat() / currentPlayerMaxHp.toFloat()
                 binding.pbHp.progressTintList = ColorStateList.valueOf(when {
                     hpPct <= 0.25f -> Color.parseColor("#FF2200")
                     hpPct <= 0.50f -> Color.parseColor("#FF8800")
@@ -269,6 +282,11 @@ class MainActivity : AppCompatActivity() {
                     Glide.with(this).load(avatar).circleCrop()
                         .placeholder(android.R.drawable.ic_menu_gallery)
                         .into(binding.ivAvatar)
+                }
+
+                // --- CEK KONDISI BURNOUT (MATI) ---
+                if (currentPlayerHp <= 0 && !isBurnoutDialogShowing) {
+                    showBurnoutDialog()
                 }
             }
     }
@@ -424,5 +442,100 @@ class MainActivity : AppCompatActivity() {
             binding.loadingIndicator.visibility = View.GONE
             Toast.makeText(this, "Gagal: ${e.message}", Toast.LENGTH_SHORT).show()
         }
+    }
+
+
+    // =========================================================
+    //  SISTEM TOKO (SHOP) & BURNOUT
+    // =========================================================
+
+    private fun setupShopButton() {
+        binding.tvPlayerGold.setOnClickListener {
+            showShopDialog()
+        }
+    }
+
+    private fun showShopDialog() {
+        val options = arrayOf(
+            "🧪 Potion Kecil (+20 HP) - 30 Gold",
+            "🧪 Potion Besar (+50 HP) - 60 Gold"
+        )
+
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("Toko Rumah Sakit 🏥")
+
+        // Jangan gunakan setMessage jika kamu menggunakan setItems
+        // Kita ganti dengan list item yang bersih
+        builder.setItems(options) { _, which ->
+            when (which) {
+                0 -> buyPotion(20, 30)
+                1 -> buyPotion(50, 60)
+            }
+        }
+
+        // Jika kamu tetap ingin menampilkan info Gold, kita taruh di Title atau biarkan di luar
+        // Atau kita pakai View custom sederhana jika ingin tampilan lebih cantik
+        builder.setNegativeButton("Tutup", null)
+        builder.show()
+    }
+
+    private fun buyPotion(healAmount: Int, cost: Int) {
+        if (currentPlayerHp >= currentPlayerMaxHp) {
+            Toast.makeText(this, "HP kamu sudah penuh!", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val uid = auth.currentUser?.uid ?: return
+        val userRef = firestore.collection("Users").document(uid)
+
+        firestore.runTransaction { tx ->
+            val snap = tx.get(userRef)
+            val currentGold = snap.getLong("gold")?.toInt() ?: 0
+            val currentHp = snap.getLong("hp")?.toInt() ?: 0
+            val maxHp = snap.getLong("maxHp")?.toInt() ?: 100
+
+            if (currentGold >= cost) {
+                val newHp = minOf(maxHp, currentHp + healAmount)
+                tx.update(userRef, "gold", currentGold - cost)
+                tx.update(userRef, "hp", newHp)
+                true
+            } else {
+                false
+            }
+        }.addOnSuccessListener { success ->
+            if (success) {
+                Toast.makeText(this, "Berhasil membeli Potion! +$healAmount HP", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "Gold kamu tidak cukup!", Toast.LENGTH_SHORT).show()
+            }
+        }.addOnFailureListener {
+            Toast.makeText(this, "Gagal memproses pembelian", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun showBurnoutDialog() {
+        isBurnoutDialogShowing = true
+
+        val penaltyGold = currentPlayerGold / 2 // Hilang 50% harta
+        val recoveryHp = currentPlayerMaxHp / 2 // Bangkit dengan 50% HP
+
+        AlertDialog.Builder(this)
+            .setTitle("💀 BURNOUT!")
+            .setMessage("HP kamu habis karena banyak tugas yang terlewat!\n\nKamu harus dirawat. Biaya perawatan akan memotong 50% Gold tabunganmu.")
+            .setCancelable(false) // Tidak bisa di-cancel/di-back!
+            .setPositiveButton("Bangkit (Bayar 🪙 $penaltyGold Gold)") { _, _ ->
+                val uid = auth.currentUser?.uid ?: return@setPositiveButton
+
+                firestore.collection("Users").document(uid).update(
+                    mapOf(
+                        "hp" to recoveryHp,
+                        "gold" to (currentPlayerGold - penaltyGold)
+                    )
+                ).addOnSuccessListener {
+                    isBurnoutDialogShowing = false
+                    Toast.makeText(this, "Kamu bangkit dengan $recoveryHp HP!", Toast.LENGTH_LONG).show()
+                }
+            }
+            .show()
     }
 }
