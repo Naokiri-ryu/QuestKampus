@@ -1,11 +1,8 @@
 package com.example.questkampus
 
-import android.content.Context
-import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Paint
-import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -19,11 +16,20 @@ import java.util.concurrent.TimeUnit
 
 class QuestAdapter(
     private var questList: List<Quest>,
-    private val onQuestCompleted: (Quest) -> Unit
+    private val onQuestClick: (Quest) -> Unit
 ) : RecyclerView.Adapter<QuestAdapter.QuestViewHolder>() {
 
     inner class QuestViewHolder(val binding: ItemQuestBinding) :
-        RecyclerView.ViewHolder(binding.root)
+        RecyclerView.ViewHolder(binding.root) {
+        init {
+            itemView.setOnClickListener {
+                val position = adapterPosition
+                if (position != RecyclerView.NO_POSITION) {
+                    onQuestClick(questList[position])
+                }
+            }
+        }
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): QuestViewHolder =
         QuestViewHolder(ItemQuestBinding.inflate(LayoutInflater.from(parent.context), parent, false))
@@ -35,7 +41,7 @@ class QuestAdapter(
 
         // --- Rank Badge ---
         b.tvQuestRank.text = quest.rank
-        b.tvQuestRank.background = ctx.getDrawable(when(quest.rank) {
+        b.tvQuestRank.background = ctx.getDrawable(when(quest.rank.uppercase()) {
             "S"  -> R.drawable.bg_rank_s
             "A"  -> R.drawable.bg_rank_a
             "B"  -> R.drawable.bg_rank_b
@@ -52,69 +58,32 @@ class QuestAdapter(
         // --- Deadline ---
         bindDeadline(b.tvQuestDeadline, quest)
 
-        // --- Support link ---
-        if (quest.support_link.isNotEmpty()) {
-            b.tvSupportLink.visibility = View.VISIBLE
-            b.tvSupportLink.text = "🔗 File Soal/Pendukung"
-            b.tvSupportLink.setOnClickListener {
-                ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(quest.support_link)))
-            }
-        } else if (quest.support_file_url.isNotEmpty()) {
-            b.tvSupportLink.visibility = View.VISIBLE
-            b.tvSupportLink.text = "📁 Lihat File Soal"
-            b.tvSupportLink.setOnClickListener {
-                ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(quest.support_file_url)))
-            }
-        } else {
-            b.tvSupportLink.visibility = View.GONE
-        }
-
-        // --- Proof indicator (setelah selesai) ---
-        if (quest.is_completed) {
-            val proofUrl = quest.proof_link.ifEmpty { quest.attachment_url }
-            if (proofUrl.isNotEmpty()) {
-                b.tvProofIndicator.visibility = View.VISIBLE
-                b.tvProofIndicator.text = "📎 Lihat Bukti Penyelesaian"
-                b.tvProofIndicator.setOnClickListener {
-                    ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(proofUrl)))
-                }
-            } else {
-                b.tvProofIndicator.visibility = View.GONE
-            }
-        } else {
-            b.tvProofIndicator.visibility = View.GONE
-        }
-
-        // --- State: selesai / gagal / aktif ---
+        // --- Status Badge ---
+        b.tvStatusBadge.visibility = View.VISIBLE
         when {
             quest.is_completed -> {
+                b.tvStatusBadge.text = "SELESAI"
+                b.tvStatusBadge.setBackgroundColor(Color.parseColor("#4CAF50"))
+                b.tvStatusBadge.setTextColor(Color.WHITE)
                 b.tvQuestTitle.paintFlags = b.tvQuestTitle.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
                 b.tvQuestTitle.setTextColor(Color.parseColor("#888888"))
-                holder.itemView.alpha = 0.65f
-                b.cbQuestDone.isChecked = true
-                b.cbQuestDone.isEnabled = false
+                holder.itemView.alpha = 0.7f
             }
             quest.is_failed -> {
+                b.tvStatusBadge.text = "GAGAL"
+                b.tvStatusBadge.setBackgroundColor(Color.parseColor("#FF4444"))
+                b.tvStatusBadge.setTextColor(Color.WHITE)
                 b.tvQuestTitle.paintFlags = b.tvQuestTitle.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
-                b.tvQuestTitle.setTextColor(Color.parseColor("#FF4444"))
-                holder.itemView.alpha = 0.55f
-                b.cbQuestDone.isChecked = false
-                b.cbQuestDone.isEnabled = false
+                b.tvQuestTitle.setTextColor(Color.parseColor("#FF8888"))
+                holder.itemView.alpha = 0.7f
             }
             else -> {
+                b.tvStatusBadge.text = "AKTIF"
+                b.tvStatusBadge.setBackgroundColor(Color.parseColor("#FFD700"))
+                b.tvStatusBadge.setTextColor(Color.BLACK)
                 b.tvQuestTitle.paintFlags = b.tvQuestTitle.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
                 b.tvQuestTitle.setTextColor(Color.WHITE)
                 holder.itemView.alpha = 1.0f
-                b.cbQuestDone.isChecked = false
-                b.cbQuestDone.isEnabled = true
-            }
-        }
-
-        // --- Checkbox ---
-        b.cbQuestDone.setOnCheckedChangeListener(null)
-        b.cbQuestDone.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked && !quest.is_completed && !quest.is_failed) {
-                onQuestCompleted(quest)
             }
         }
     }
@@ -127,10 +96,10 @@ class QuestAdapter(
         val sdf = SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault())
         val fmt = sdf.format(Date(quest.deadline))
         when {
-            quest.is_completed -> { tv.text = "✅ Selesai · $fmt"; tv.setTextColor(Color.parseColor("#4CAF50")) }
-            quest.is_failed    -> { tv.text = "💀 Gagal · $fmt";   tv.setTextColor(Color.parseColor("#FF4444")) }
+            quest.is_completed -> { tv.text = "✅ $fmt"; tv.setTextColor(Color.parseColor("#4CAF50")) }
+            quest.is_failed    -> { tv.text = "💀 $fmt";   tv.setTextColor(Color.parseColor("#FF4444")) }
             now > quest.deadline -> {
-                tv.text = "⚠ Terlambat ${TimeUnit.MILLISECONDS.toMinutes(now - quest.deadline)}m · $fmt"
+                tv.text = "⚠ Terlambat · $fmt"
                 tv.setTextColor(Color.parseColor("#FF4444"))
             }
             else -> {

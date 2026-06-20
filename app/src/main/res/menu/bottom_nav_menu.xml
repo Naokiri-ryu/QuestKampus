@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/nav_dashboard" android:icon="@android:drawable/ic_menu_myplaces" android:title="Dashboard" />
+    <item android:id="@+id/nav_quests"    android:icon="@android:drawable/ic_menu_view"      android:title="Quest Board" />
+    <item android:id="@+id/nav_party"     android:icon="@android:drawable/ic_menu_share"     android:title="Party" />
+</menu>

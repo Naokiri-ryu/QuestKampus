@@ -2,7 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Notifikasi (Android 13+) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
@@ -27,6 +26,7 @@
         <activity android:name=".RegisterActivity" android:exported="false" />
         <activity android:name=".MainActivity"     android:exported="false" />
         <activity android:name=".PartyActivity"    android:exported="false" />
+        <activity android:name=".QuestDetailActivity" android:exported="false" />
 
     </application>
 

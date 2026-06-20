@@ -10,7 +10,8 @@
     app:cardCornerRadius="12dp"
     app:cardElevation="4dp"
     app:strokeColor="@color/accent_gold"
-    app:strokeWidth="1dp">
+    app:strokeWidth="1dp"
+    android:foreground="?attr/selectableItemBackground">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -36,13 +37,12 @@
             android:id="@+id/tv_quest_title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:layout_marginEnd="8dp"
+            android:layout_marginStart="12dp"
             android:text="Judul Quest"
             android:textColor="@color/white"
             android:textSize="15sp"
             android:textStyle="bold"
-            app:layout_constraintEnd_toStartOf="@id/cb_quest_done"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/tv_quest_rank"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -72,43 +72,20 @@
             app:layout_constraintStart_toStartOf="@id/tv_quest_title"
             app:layout_constraintTop_toBottomOf="@id/tv_quest_flavor" />
 
-        <!-- Link pendukung (tampil hanya jika ada) -->
+        <!-- Status Badge (Selesai/Gagal) -->
         <TextView
-            android:id="@+id/tv_support_link"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:text=""
-            android:textColor="@color/exp_blue"
-            android:textSize="11sp"
-            android:visibility="gone"
-            app:layout_constraintEnd_toEndOf="@id/tv_quest_title"
-            app:layout_constraintStart_toStartOf="@id/tv_quest_title"
-            app:layout_constraintTop_toBottomOf="@id/tv_quest_deadline" />
-
-        <!-- Bukti (tampil saat selesai) -->
-        <TextView
-            android:id="@+id/tv_proof_indicator"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:text=""
-            android:textColor="#4CAF50"
-            android:textSize="11sp"
-            android:visibility="gone"
-            app:layout_constraintEnd_toEndOf="@id/tv_quest_title"
-            app:layout_constraintStart_toStartOf="@id/tv_quest_title"
-            app:layout_constraintTop_toBottomOf="@id/tv_support_link" />
-
-        <!-- Checkbox selesai -->
-        <CheckBox
-            android:id="@+id/cb_quest_done"
+            android:id="@+id/tv_status_badge"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:buttonTint="@color/accent_gold"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            android:layout_marginTop="4dp"
+            android:paddingHorizontal="6dp"
+            android:paddingVertical="2dp"
+            android:text="AKTIF"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:visibility="gone"
+            app:layout_constraintStart_toStartOf="@id/tv_quest_title"
+            app:layout_constraintTop_toBottomOf="@id/tv_quest_deadline" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>

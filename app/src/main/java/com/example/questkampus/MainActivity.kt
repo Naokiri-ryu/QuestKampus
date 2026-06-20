@@ -30,6 +30,9 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.bumptech.glide.Glide
 import com.example.questkampus.databinding.ActivityMainBinding
 import com.google.android.material.snackbar.Snackbar
@@ -43,6 +46,7 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
 
@@ -58,16 +62,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var imagePickerLauncher: ActivityResultLauncher<String>
     private lateinit var supportFileLauncher: ActivityResultLauncher<String>
 
-    // Quest state
     private var allQuests     = listOf<Quest>()
     private var currentFilter = "all"
-
-    // Pending quest completion
-    private var pendingQuestId    : String? = null
-    private var pendingQuestExp   : Int     = 0
-    private var pendingProofLink  : String  = ""
-
-    // Support file upload (saat add quest)
     private var pendingSupportFileUri: Uri? = null
 
     private val TIPS = listOf(
@@ -105,6 +101,8 @@ class MainActivity : AppCompatActivity() {
         setupSwipeToDelete()
         fetchPlayerStats()
         loadQuests()
+        setupBackgroundWorker()
+
         binding.tvTip.text = TIPS.random()
     }
 
@@ -114,35 +112,28 @@ class MainActivity : AppCompatActivity() {
         questsListener?.remove()
     }
 
-    // =========================================================
-    //  Permission
-    // =========================================================
+    private fun setupBackgroundWorker() {
+        val request = PeriodicWorkRequestBuilder<DeadlineWorker>(1, TimeUnit.HOURS).build()
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "DeadlineWorkerCheck",
+            ExistingPeriodicWorkPolicy.KEEP,
+            request
+        )
+    }
 
     private fun requestNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
             requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 101)
     }
-    // =========================================================
-    //  Image / File Launchers
-    // =========================================================
 
     private fun setupLaunchers() {
-        // Launcher untuk bukti quest atau avatar
         imagePickerLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-            uri?.let {
-                if (pendingQuestId == null) uploadAvatar(it)
-                else showCompleteQuestDialog(pendingQuestId!!, pendingQuestExp, it)
-            }
+            uri?.let { uploadAvatar(it) }
         }
-        // Launcher untuk file pendukung quest (lampiran soal)
         supportFileLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
             uri?.let { pendingSupportFileUri = it }
         }
     }
-
-    // =========================================================
-    //  UI Setup
-    // =========================================================
 
     private fun setupUI() {
         binding.fabAddQuest.setOnClickListener { showAddQuestDialog() }
@@ -151,12 +142,8 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, LoginActivity::class.java)); finish()
         }
         binding.btnParty.setOnClickListener { startActivity(Intent(this, PartyActivity::class.java)) }
-        binding.cvProfile.setOnClickListener { pendingQuestId = null; imagePickerLauncher.launch("image/*") }
+        binding.cvProfile.setOnClickListener { imagePickerLauncher.launch("image/*") }
     }
-
-    // =========================================================
-    //  Bottom Navigation
-    // =========================================================
 
     private fun setupBottomNav() {
         showTab("dashboard")
@@ -175,10 +162,6 @@ class MainActivity : AppCompatActivity() {
         binding.panelQuests.visibility    = if (tab == "quests")    View.VISIBLE else View.GONE
         binding.fabAddQuest.visibility    = if (tab == "quests")    View.VISIBLE else View.GONE
     }
-
-    // =========================================================
-    //  Filter Chips
-    // =========================================================
 
     private fun setupFilterChips() {
         binding.chipGroupFilter.setOnCheckedStateChangeListener { _, checkedIds ->
@@ -204,15 +187,12 @@ class MainActivity : AppCompatActivity() {
         binding.tvEmptyQuests.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
     }
 
-    // =========================================================
-    //  RecyclerView + Swipe Delete
-    // =========================================================
-
     private fun setupRecyclerView() {
         questAdapter = QuestAdapter(emptyList()) { quest ->
-            pendingQuestId  = quest.id
-            pendingQuestExp = quest.exp_reward
-            imagePickerLauncher.launch("image/*")
+            // SEKARANG MEMBUKA HALAMAN DETAIL, BUKAN UPLOAD LANGSUNG
+            val intent = Intent(this, QuestDetailActivity::class.java)
+            intent.putExtra("QUEST_ID", quest.id)
+            startActivity(intent)
         }
         binding.rvQuests.layoutManager = LinearLayoutManager(this)
         binding.rvQuests.adapter = questAdapter
@@ -253,18 +233,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun restoreQuest(quest: Quest) {
-        firestore.collection("Quests").document(quest.id).set(mapOf(
-            "title" to quest.title, "desc" to quest.desc, "rank" to quest.rank,
-            "exp_reward" to quest.exp_reward, "deadline" to quest.deadline,
-            "is_completed" to quest.is_completed, "is_failed" to quest.is_failed,
-            "creator_id" to quest.creator_id, "attachment_url" to quest.attachment_url,
-            "support_link" to quest.support_link, "support_file_url" to quest.support_file_url
-        )).addOnSuccessListener { Toast.makeText(this, "Quest dipulihkan.", Toast.LENGTH_SHORT).show() }
+        firestore.collection("Quests").document(quest.id).set(quest).addOnSuccessListener { 
+            Toast.makeText(this, "Quest dipulihkan.", Toast.LENGTH_SHORT).show() 
+        }
     }
-
-    // =========================================================
-    //  Firebase: Stats (real-time) — FIX: load avatar dengan Glide
-    // =========================================================
 
     private fun fetchPlayerStats() {
         val uid = auth.currentUser?.uid ?: return
@@ -293,8 +265,7 @@ class MainActivity : AppCompatActivity() {
                     else           -> Color.parseColor("#FF4444")
                 })
 
-                // ✅ FIX: Load avatar dengan Glide
-                if (avatar.isNotEmpty()) {
+                if (avatar.isNotEmpty() && !isDestroyed) {
                     Glide.with(this).load(avatar).circleCrop()
                         .placeholder(android.R.drawable.ic_menu_gallery)
                         .into(binding.ivAvatar)
@@ -302,19 +273,14 @@ class MainActivity : AppCompatActivity() {
             }
     }
 
-    // =========================================================
-    //  Firebase: Load Quests — FIX: hapus orderBy, sort lokal
-    // =========================================================
-
     private fun loadQuests() {
         val uid = auth.currentUser?.uid ?: return
         questsListener = firestore.collection("Quests")
             .whereEqualTo("creator_id", uid)
-            // FIX: hapus .orderBy("deadline") → butuh index, sort lokal saja
             .addSnapshotListener { snapshot, e ->
                 if (e != null) { Log.w("MainActivity", "Quests listen failed", e); return@addSnapshotListener }
                 allQuests = (snapshot?.toObjects(Quest::class.java) ?: emptyList())
-                    .sortedBy { it.deadline } // sort lokal
+                    .sortedBy { it.deadline }
 
                 binding.tvCountActive.text = allQuests.count { !it.is_completed && !it.is_failed }.toString()
                 binding.tvCountDone.text   = allQuests.count { it.is_completed }.toString()
@@ -322,34 +288,8 @@ class MainActivity : AppCompatActivity() {
                 binding.cvStartHint.visibility = if (allQuests.isEmpty()) View.VISIBLE else View.GONE
 
                 applyFilter()
-                checkDeadlinePenalties(allQuests)
             }
     }
-
-    // =========================================================
-    //  Deadline Penalty
-    // =========================================================
-
-    private fun checkDeadlinePenalties(quests: List<Quest>) {
-        val uid = auth.currentUser?.uid ?: return
-        val now = System.currentTimeMillis()
-        val userRef = firestore.collection("Users").document(uid)
-        quests.filter { !it.is_completed && !it.is_failed && it.deadline > 0 && now > it.deadline }.forEach { fq ->
-            firestore.collection("Quests").document(fq.id).update("is_failed", true).addOnSuccessListener {
-                val p = when (fq.rank) { "S" -> 50; "A" -> 30; "B" -> 15; else -> 5 }
-                firestore.runTransaction { tx ->
-                    val hp = (tx.get(userRef).getLong("hp") ?: 100).toInt()
-                    tx.update(userRef, "hp", maxOf(0, hp - p))
-                }.addOnSuccessListener {
-                    Toast.makeText(this, "💀 Quest '${fq.title}' gagal! -$p HP", Toast.LENGTH_LONG).show()
-                }
-            }
-        }
-    }
-
-    // =========================================================
-    //  Add Quest Dialog — dengan RPG theming + auto rank + support file
-    // =========================================================
 
     private fun showAddQuestDialog() {
         pendingSupportFileUri = null
@@ -370,7 +310,6 @@ class MainActivity : AppCompatActivity() {
         rankAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerRank.adapter = rankAdapter
 
-        // Auto-suggest rank dari judul
         etTitle.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
                 val suggested = RpgTheme.suggestRank(s.toString())
@@ -380,7 +319,6 @@ class MainActivity : AppCompatActivity() {
             override fun onTextChanged(s: CharSequence?, st: Int, b: Int, c: Int) {}
         })
 
-        // Update preview saat rank berubah
         spinnerRank.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(p: AdapterView<*>?, v: View?, pos: Int, id: Long) {
                 val rank = spinnerRank.selectedItem.toString()
@@ -391,13 +329,11 @@ class MainActivity : AppCompatActivity() {
             override fun onNothingSelected(p: AdapterView<*>?) {}
         }
 
-        // File lampiran
         btnAttach.setOnClickListener {
             supportFileLauncher.launch("*/*")
             tvFileStatus.text = "📁 File dipilih (akan diupload saat simpan)"
         }
 
-        // Deadline picker
         var selectedDeadline = 0L
         val cal = Calendar.getInstance()
         btnDate.setOnClickListener {
@@ -446,7 +382,7 @@ class MainActivity : AppCompatActivity() {
             }
         }.addOnFailureListener {
             binding.loadingIndicator.visibility = View.GONE
-            saveNewQuest(title, desc, rank, deadline, supLink, "") // simpan tanpa file
+            saveNewQuest(title, desc, rank, deadline, supLink, "")
         }
     }
 
@@ -460,7 +396,7 @@ class MainActivity : AppCompatActivity() {
             "creator_id" to uid,
             "attachment_url" to "", "proof_link" to "", "proof_type" to "image",
             "support_link" to supLink, "support_file_url" to supFileUrl,
-            "party_id" to "", "assigned_to" to ""
+            "penalty_applied" to false
         )).addOnSuccessListener {
             binding.loadingIndicator.visibility = View.GONE
             Toast.makeText(this, "${RpgTheme.rankIcon(rank)} Quest '$title' ditambahkan!", Toast.LENGTH_SHORT).show()
@@ -469,115 +405,6 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "Gagal: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
-
-    // =========================================================
-    //  Quest Completion — FIX: dialog bukti, reset pendingQuestId cepat
-    // =========================================================
-
-    private fun showCompleteQuestDialog(questId: String, expReward: Int, imageUri: Uri?) {
-        val quest = allQuests.find { it.id == questId } ?: return
-        val dialogView = layoutInflater.inflate(R.layout.dialog_complete_quest, null)
-        val tvFlavor   = dialogView.findViewById<TextView>(R.id.tv_quest_flavor)
-        val btnUpload  = dialogView.findViewById<Button>(R.id.btn_upload_image)
-        val etLink     = dialogView.findViewById<TextInputEditText>(R.id.et_proof_link)
-        val tvStatus   = dialogView.findViewById<TextView>(R.id.tv_proof_status)
-
-        tvFlavor.text = RpgTheme.completionFlavor(quest.rank, quest.title)
-
-        var selectedUri = imageUri
-        if (selectedUri != null) tvStatus.text = "✅ Foto bukti siap diupload"
-
-        btnUpload.setOnClickListener {
-            pendingQuestId  = questId
-            pendingQuestExp = expReward
-            imagePickerLauncher.launch("image/*")
-        }
-
-        AlertDialog.Builder(this).setView(dialogView)
-            .setPositiveButton("Selesaikan!") { _, _ ->
-                // ✅ FIX: reset SEBELUM async apapun
-                pendingQuestId = null
-                val proofLink = etLink.text.toString().trim()
-                when {
-                    selectedUri != null -> uploadProofAndComplete(questId, expReward, selectedUri!!)
-                    proofLink.isNotEmpty() -> completeQuest(questId, expReward, "", proofLink, "link")
-                    else -> completeQuest(questId, expReward, "", "", "none")
-                }
-            }
-            .setNegativeButton("Batal") { _, _ -> pendingQuestId = null }
-            .create().also { d ->
-                d.setOnShowListener { d.getButton(AlertDialog.BUTTON_POSITIVE)?.setTextColor(Color.parseColor("#FFD700")) }
-            }.show()
-    }
-
-    private fun uploadProofAndComplete(questId: String, expReward: Int, imageUri: Uri) {
-        binding.loadingIndicator.visibility = View.VISIBLE
-        val ref = storage.reference.child("quest_proofs/${UUID.randomUUID()}.jpg")
-        ref.putFile(imageUri).addOnSuccessListener {
-            ref.downloadUrl.addOnSuccessListener { url ->
-                completeQuest(questId, expReward, url.toString(), "", "image")
-            }
-        }.addOnFailureListener { e ->
-            binding.loadingIndicator.visibility = View.GONE
-            Toast.makeText(this, "Gagal upload: ${e.message}", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun completeQuest(questId: String, expReward: Int, attachUrl: String, proofLink: String, proofType: String) {
-        val uid = auth.currentUser?.uid ?: return
-        val userRef  = firestore.collection("Users").document(uid)
-        val questRef = firestore.collection("Quests").document(questId)
-        val (_, goldReward) = rankToRewards(questAdapter.getRankForId(questId) ?: "C")
-
-        // ✅ FIX: Update quest langsung
-        questRef.update(mapOf(
-            "is_completed"   to true,
-            "attachment_url" to attachUrl,
-            "proof_link"     to proofLink,
-            "proof_type"     to proofType
-        )).addOnSuccessListener {
-            firestore.runTransaction { tx ->
-                val snap    = tx.get(userRef)
-                val level   = snap.getLong("level")?.toInt() ?: 1
-                val curExp  = snap.getLong("exp")?.toInt()   ?: 0
-                val maxExp  = snap.getLong("maxExp")?.toInt() ?: RpgTheme.maxExpForLevel(level)
-                val curGold = snap.getLong("gold")?.toInt()  ?: 0
-                val newExp  = curExp + expReward
-                val newGold = curGold + goldReward
-                if (newExp >= maxExp) {
-                    val newLevel   = level + 1
-                    val newMaxExp  = RpgTheme.maxExpForLevel(newLevel) // EXP scaling eksponensial
-                    tx.update(userRef, "level", newLevel)
-                    tx.update(userRef, "exp",    newExp - maxExp)
-                    tx.update(userRef, "maxExp", newMaxExp)
-                    tx.update(userRef, "gold",   newGold)
-                    true
-                } else {
-                    tx.update(userRef, "exp",  newExp)
-                    tx.update(userRef, "gold", newGold)
-                    false
-                }
-            }.addOnSuccessListener { leveledUp ->
-                binding.loadingIndicator.visibility = View.GONE
-                if (leveledUp) {
-                    Toast.makeText(this, "🎉 LEVEL UP! +$expReward EXP +$goldReward Gold", Toast.LENGTH_LONG).show()
-                    NotificationHelper.notifyLevelUp(this, 0)
-                } else {
-                    Toast.makeText(this, "✅ Quest selesai! +$expReward EXP +$goldReward Gold", Toast.LENGTH_SHORT).show()
-                }
-            }.addOnFailureListener { e ->
-                binding.loadingIndicator.visibility = View.GONE
-                Log.e("MainActivity", "Stats update failed", e)
-            }
-        }.addOnFailureListener { e ->
-            binding.loadingIndicator.visibility = View.GONE
-            Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    // =========================================================
-    //  Avatar Upload (Glide akan load setelah stats listener update)
-    // =========================================================
 
     private fun uploadAvatar(imageUri: Uri) {
         val uid = auth.currentUser?.uid ?: return
@@ -590,7 +417,6 @@ class MainActivity : AppCompatActivity() {
                     .addOnSuccessListener {
                         binding.loadingIndicator.visibility = View.GONE
                         Toast.makeText(this, "Avatar diperbarui!", Toast.LENGTH_SHORT).show()
-                        // Langsung load juga ke ImageView
                         Glide.with(this).load(url.toString()).circleCrop().into(binding.ivAvatar)
                     }
             }
