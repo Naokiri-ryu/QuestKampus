@@ -1,13 +1,14 @@
-package com.example.questkampus
+package com.example.questkampus.utils
 
+import android.Manifest
+import android.R
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import android.Manifest
-import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
 
 object NotificationHelper {
@@ -30,7 +31,7 @@ object NotificationHelper {
 
     fun notifyLevelUp(context: Context, level: Int) {
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.star_on)
+            .setSmallIcon(R.drawable.star_on)
             .setContentTitle("🎉 LEVEL UP!")
             .setContentText("Selamat! Kamu telah mencapai level baru. Teruslah berjuang, Hero!")
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)

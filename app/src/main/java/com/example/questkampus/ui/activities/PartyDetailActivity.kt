@@ -1,4 +1,4 @@
-package com.example.questkampus
+package com.example.questkampus.ui.activities
 
 import android.app.AlertDialog
 import android.app.DatePickerDialog
@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
+import android.text.InputType
 import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Button
@@ -17,6 +18,13 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.questkampus.ui.adapters.MemberAdapter
+import com.example.questkampus.ui.adapters.QuestAdapter
+import com.example.questkampus.ui.activities.QuestDetailActivity
+import com.example.questkampus.R
+import com.example.questkampus.data.model.Member
+import com.example.questkampus.data.model.Party
+import com.example.questkampus.data.model.Quest
 import com.example.questkampus.databinding.ActivityPartyDetailBinding
 import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.auth.FirebaseAuth
@@ -156,7 +164,7 @@ class PartyDetailActivity : AppCompatActivity() {
     private fun showInviteDialog() {
         val etInput = EditText(this).apply {
             hint = "Masukkan Email atau Nama Hero"
-            inputType = android.text.InputType.TYPE_CLASS_TEXT
+            inputType = InputType.TYPE_CLASS_TEXT
         }
 
         val layout = LinearLayout(this).apply {
@@ -268,9 +276,17 @@ class PartyDetailActivity : AppCompatActivity() {
             DatePickerDialog(this, { _, y, m, d ->
                 cal.set(y, m, d)
                 TimePickerDialog(this, { _, h, min ->
-                    cal.set(Calendar.HOUR_OF_DAY, h); cal.set(Calendar.MINUTE, min); cal.set(Calendar.SECOND, 0)
+                    cal.set(Calendar.HOUR_OF_DAY, h); cal.set(Calendar.MINUTE, min); cal.set(
+                    Calendar.SECOND,
+                    0
+                )
                     selectedDeadline = cal.timeInMillis
-                    tvDeadline.text = "✅ ${SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault()).format(Date(selectedDeadline))}"
+                    tvDeadline.text = "✅ ${
+                        SimpleDateFormat(
+                            "dd MMM yyyy, HH:mm",
+                            Locale.getDefault()
+                        ).format(Date(selectedDeadline))
+                    }"
                     tvDeadline.setTextColor(Color.parseColor("#FFD700"))
                 }, cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), true).show()
             }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()

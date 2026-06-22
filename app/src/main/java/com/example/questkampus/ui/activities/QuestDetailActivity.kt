@@ -1,5 +1,6 @@
-package com.example.questkampus
+package com.example.questkampus.ui.activities
 
+import android.R
 import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
@@ -7,12 +8,15 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
+import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
+import com.example.questkampus.data.model.Quest
 import com.example.questkampus.databinding.ActivityQuestDetailBinding
+import com.example.questkampus.utils.RpgTheme
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -95,25 +99,25 @@ class QuestDetailActivity : AppCompatActivity() {
         when {
             quest.is_completed -> {
                 binding.tvDetailStatus.text = "SELESAI"
-                binding.tvDetailStatus.setTextColor(resources.getColor(android.R.color.holo_green_dark))
+                binding.tvDetailStatus.setTextColor(resources.getColor(R.color.holo_green_dark))
                 binding.layoutActions.visibility = View.GONE
                 binding.tvStatusFooter.visibility = View.VISIBLE
                 binding.tvStatusFooter.text = "QUEST TELAH SELESAI"
-                binding.tvStatusFooter.setTextColor(resources.getColor(android.R.color.holo_green_dark))
+                binding.tvStatusFooter.setTextColor(resources.getColor(R.color.holo_green_dark))
                 disableEditing()
             }
             quest.is_failed -> {
                 binding.tvDetailStatus.text = "GAGAL"
-                binding.tvDetailStatus.setTextColor(resources.getColor(android.R.color.holo_red_dark))
+                binding.tvDetailStatus.setTextColor(resources.getColor(R.color.holo_red_dark))
                 binding.layoutActions.visibility = View.GONE
                 binding.tvStatusFooter.visibility = View.VISIBLE
                 binding.tvStatusFooter.text = "QUEST GAGAL"
-                binding.tvStatusFooter.setTextColor(resources.getColor(android.R.color.holo_red_dark))
+                binding.tvStatusFooter.setTextColor(resources.getColor(R.color.holo_red_dark))
                 disableEditing()
             }
             else -> {
                 binding.tvDetailStatus.text = "AKTIF"
-                binding.tvDetailStatus.setTextColor(resources.getColor(R.color.accent_gold))
+                binding.tvDetailStatus.setTextColor(resources.getColor(com.example.questkampus.R.color.accent_gold))
                 binding.layoutActions.visibility = View.VISIBLE
                 binding.tvStatusFooter.visibility = View.GONE
 
@@ -268,7 +272,7 @@ class QuestDetailActivity : AppCompatActivity() {
     }
 
     private fun showLinkInputDialog() {
-        val input = android.widget.EditText(this)
+        val input = EditText(this)
         AlertDialog.Builder(this)
             .setTitle("Link Bukti")
             .setView(input)

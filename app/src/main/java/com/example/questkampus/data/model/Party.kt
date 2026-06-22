@@ -1,4 +1,4 @@
-package com.example.questkampus
+package com.example.questkampus.data.model
 
 import com.google.firebase.firestore.DocumentId
 

@@ -1,10 +1,12 @@
-package com.example.questkampus
+package com.example.questkampus.ui.activities
 
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.example.questkampus.ui.activities.MainActivity
+import com.example.questkampus.ui.activities.RegisterActivity
 import com.example.questkampus.databinding.ActivityLoginBinding
 import com.google.firebase.auth.FirebaseAuth
 

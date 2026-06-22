@@ -1,4 +1,4 @@
-package com.example.questkampus
+package com.example.questkampus.utils
 
 object RpgTheme {
 

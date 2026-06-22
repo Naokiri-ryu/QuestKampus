@@ -15,7 +15,7 @@
         android:theme="@style/Theme.QuestKampus">
 
         <activity
-            android:name=".LoginActivity"
+            android:name=".ui.activities.LoginActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -23,11 +23,11 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".RegisterActivity" android:exported="false" />
-        <activity android:name=".MainActivity"     android:exported="false" />
-        <activity android:name=".PartyActivity"    android:exported="false" />
-        <activity android:name=".QuestDetailActivity" android:exported="false" />
-        <activity android:name=".PartyDetailActivity" android:exported="false" />
+        <activity android:name=".ui.activities.RegisterActivity" android:exported="false" />
+        <activity android:name=".ui.activities.MainActivity"     android:exported="false" />
+        <activity android:name=".ui.activities.PartyActivity"    android:exported="false" />
+        <activity android:name=".ui.activities.QuestDetailActivity" android:exported="false" />
+        <activity android:name=".ui.activities.PartyDetailActivity" android:exported="false" />
 
     </application>
 

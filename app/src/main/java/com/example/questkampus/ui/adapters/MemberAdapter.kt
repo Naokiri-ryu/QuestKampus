@@ -1,4 +1,4 @@
-package com.example.questkampus
+package com.example.questkampus.ui.adapters
 
 import android.view.LayoutInflater
 import android.view.View
@@ -8,6 +8,8 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.example.questkampus.R
+import com.example.questkampus.data.model.Member
 
 class MemberAdapter(private var memberList: List<Member>) : RecyclerView.Adapter<MemberAdapter.MemberViewHolder>() {
 

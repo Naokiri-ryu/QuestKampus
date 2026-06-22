@@ -1,6 +1,5 @@
-package com.example.questkampus
+package com.example.questkampus.ui.adapters
 
-import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Paint
 import android.view.LayoutInflater
@@ -8,6 +7,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.example.questkampus.R
+import com.example.questkampus.utils.RpgTheme
+import com.example.questkampus.data.model.Quest
 import com.example.questkampus.databinding.ItemQuestBinding
 import java.text.SimpleDateFormat
 import java.util.Date

@@ -1,4 +1,4 @@
-package com.example.questkampus
+package com.example.questkampus.ui.adapters
 
 import android.view.LayoutInflater
 import android.view.View
@@ -6,6 +6,8 @@ import android.view.ViewGroup
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.example.questkampus.R
+import com.example.questkampus.data.model.Party
 
 class PartyAdapter(
     private var partyList: List<Party>,

@@ -1,6 +1,8 @@
-package com.example.questkampus
+package com.example.questkampus.ui.activities
 
+import android.content.Intent
 import android.os.Bundle
+import android.text.InputType
 import android.view.View
 import android.widget.EditText
 import android.widget.LinearLayout
@@ -8,12 +10,15 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.questkampus.ui.adapters.PartyAdapter
+import com.example.questkampus.ui.activities.PartyDetailActivity
+import com.example.questkampus.data.model.Party
 import com.example.questkampus.databinding.ActivityPartyBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
-import android.content.Intent
+
 class PartyActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityPartyBinding
@@ -134,7 +139,7 @@ class PartyActivity : AppCompatActivity() {
     private fun showJoinPartyDialog() {
         val etPin = EditText(this).apply {
             hint = "Masukkan 6 Digit PIN"
-            inputType = android.text.InputType.TYPE_CLASS_NUMBER
+            inputType = InputType.TYPE_CLASS_NUMBER
         }
 
         val layout = LinearLayout(this).apply {

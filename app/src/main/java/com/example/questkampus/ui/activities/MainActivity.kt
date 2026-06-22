@@ -1,5 +1,6 @@
-package com.example.questkampus
+package com.example.questkampus.ui.activities
 
+import android.Manifest
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.Intent
@@ -34,7 +35,14 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.bumptech.glide.Glide
+import com.example.questkampus.ui.activities.QuestDetailActivity
+import com.example.questkampus.R
+import com.example.questkampus.data.model.Quest
 import com.example.questkampus.databinding.ActivityMainBinding
+import com.example.questkampus.ui.adapters.QuestAdapter
+import com.example.questkampus.utils.NotificationHelper
+import com.example.questkampus.utils.RpgTheme
+import com.example.questkampus.worker.DeadlineWorker
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.auth.FirebaseAuth
@@ -130,7 +138,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun requestNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-            requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 101)
+            requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 101)
     }
 
     private fun setupLaunchers() {
@@ -242,8 +250,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun restoreQuest(quest: Quest) {
-        firestore.collection("Quests").document(quest.id).set(quest).addOnSuccessListener { 
-            Toast.makeText(this, "Quest dipulihkan.", Toast.LENGTH_SHORT).show() 
+        firestore.collection("Quests").document(quest.id).set(quest).addOnSuccessListener {
+            Toast.makeText(this, "Quest dipulihkan.", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -358,9 +366,17 @@ class MainActivity : AppCompatActivity() {
             DatePickerDialog(this, { _, y, m, d ->
                 cal.set(y, m, d)
                 TimePickerDialog(this, { _, h, min ->
-                    cal.set(Calendar.HOUR_OF_DAY, h); cal.set(Calendar.MINUTE, min); cal.set(Calendar.SECOND, 0)
+                    cal.set(Calendar.HOUR_OF_DAY, h); cal.set(Calendar.MINUTE, min); cal.set(
+                    Calendar.SECOND,
+                    0
+                )
                     selectedDeadline = cal.timeInMillis
-                    tvDeadline.text = "✅ ${SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault()).format(Date(selectedDeadline))}"
+                    tvDeadline.text = "✅ ${
+                        SimpleDateFormat(
+                            "dd MMM yyyy, HH:mm",
+                            Locale.getDefault()
+                        ).format(Date(selectedDeadline))
+                    }"
                     tvDeadline.setTextColor(Color.parseColor("#FFD700"))
                 }, cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), true).show()
             }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
@@ -382,7 +398,8 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             .setNegativeButton("Batal", null).create()
-            .also { d -> d.setOnShowListener { d.getButton(AlertDialog.BUTTON_POSITIVE)?.setTextColor(Color.parseColor("#FFD700")) } }
+            .also { d -> d.setOnShowListener { d.getButton(AlertDialog.BUTTON_POSITIVE)?.setTextColor(
+                Color.parseColor("#FFD700")) } }
             .show()
     }
 
