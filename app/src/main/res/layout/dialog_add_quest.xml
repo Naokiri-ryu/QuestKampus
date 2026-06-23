@@ -3,24 +3,27 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/rpg_card_surface">
+    android:background="@android:color/transparent"> <!-- Background Dibuat Transparan -->
 
+    <!-- PNG common_grid_popup diterapkan di sini dengan padding besar -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@drawable/common_grid_popup"
         android:orientation="vertical"
-        android:padding="20dp">
+        android:paddingTop="36dp"
+        android:paddingBottom="42dp"
+        android:paddingHorizontal="28dp">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="⚔ Tambah Quest Baru"
+            android:text="📜 Buat Quest Baru"
             android:textColor="@color/accent_gold"
-            android:textSize="20sp"
+            android:textSize="18sp"
             android:textStyle="bold"
             android:layout_marginBottom="16dp" />
 
-        <!-- Judul + auto-suggest rank -->
         <com.google.android.material.textfield.TextInputLayout
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
@@ -36,17 +39,6 @@
                 android:textColor="@color/white" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <TextView
-            android:id="@+id/tv_rank_suggestion"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:layout_marginBottom="4dp"
-            android:text=""
-            android:textColor="@color/accent_gold"
-            android:textSize="12sp" />
-
-        <!-- Deskripsi -->
         <com.google.android.material.textfield.TextInputLayout
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
@@ -64,61 +56,22 @@
                 android:textColor="@color/white" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Rank -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:layout_marginBottom="4dp"
-            android:text="Rank Kesulitan:"
-            android:textColor="@color/text_secondary"
-            android:textSize="14sp" />
-
-        <Spinner
-            android:id="@+id/spinner_rank"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:entries="@array/rank_options"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:paddingTop="8dp"
-            android:paddingBottom="8dp" />
-
-        <TextView
-            android:id="@+id/tv_rank_description"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:text=""
-            android:textColor="@color/text_secondary"
-            android:textSize="11sp" />
-
-        <TextView
-            android:id="@+id/tv_exp_preview"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:text="Reward: 50 EXP · 10 Gold"
-            android:textColor="@color/accent_gold"
-            android:textSize="12sp" />
-
-        <!-- Deadline -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
+            android:layout_marginTop="16dp"
             android:layout_marginBottom="4dp"
             android:text="Batas Waktu (Deadline):"
-            android:textColor="@color/text_secondary"
-            android:textSize="14sp" />
+            android:textColor="@color/white"
+            android:textSize="12sp" />
 
         <Button
             android:id="@+id/btn_pick_date"
             style="@style/Widget.Material3.Button.OutlinedButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:backgroundTint="@color/rpg_background"
-            android:text="📅 Pilih Tanggal &amp; Jam"
+            android:backgroundTint="#2C3E50"
+            android:text="Pilih Tanggal &amp; Jam"
             android:textColor="@color/accent_gold"
             app:strokeColor="@color/accent_gold" />
 
@@ -129,34 +82,33 @@
             android:layout_marginTop="4dp"
             android:gravity="center"
             android:text="Belum dipilih"
-            android:textColor="@color/text_secondary"
-            android:textSize="13sp" />
+            android:textColor="#AAAAAA"
+            android:textSize="12sp" />
 
-        <!-- File/Link Pendukung (opsional) -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:layout_marginBottom="4dp"
-            android:text="📎 File/Link Pendukung (opsional):"
-            android:textColor="@color/text_secondary"
-            android:textSize="14sp" />
+            android:text="Lampiran Soal (Opsional):"
+            android:textColor="@color/white"
+            android:textSize="12sp" />
 
         <Button
             android:id="@+id/btn_attach_file"
             style="@style/Widget.Material3.Button.OutlinedButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="📁 Lampirkan File"
-            android:textColor="@color/text_secondary"
-            app:strokeColor="@color/text_secondary" />
+            android:text="Lampirkan File"
+            android:textColor="#AAAAAA"
+            app:strokeColor="#AAAAAA" />
 
         <com.google.android.material.textfield.TextInputLayout
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:hint="Link pendukung (Google Drive, URL, dll)"
+            android:hint="Link pendukung (G-Drive, dll)"
             app:boxStrokeColor="@color/exp_blue"
             app:hintTextColor="@color/exp_blue">
             <com.google.android.material.textfield.TextInputEditText
@@ -175,6 +127,5 @@
             android:text=""
             android:textColor="@color/accent_gold"
             android:textSize="12sp" />
-
     </LinearLayout>
 </ScrollView>

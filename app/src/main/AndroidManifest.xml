@@ -29,6 +29,10 @@
         <activity android:name=".ui.activities.QuestDetailActivity" android:exported="false" />
         <activity android:name=".ui.activities.PartyDetailActivity" android:exported="false" />
 
+        <activity
+            android:name=".ui.activities.ProfileActivity"
+            android:exported="false" />
+
     </application>
 
 </manifest>

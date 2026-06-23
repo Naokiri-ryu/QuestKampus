@@ -4,20 +4,27 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/rpg_background">
+    android:background="#151515">
 
-    <!-- App Bar / Toolbar -->
+    <!-- EFEK BACKGROUND HALAMAN -->
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:src="@drawable/menu_character_bg"
+        android:scaleType="fitXY" />
+
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/rpg_background">
+        android:background="@android:color/transparent"
+        app:elevation="0dp">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             app:title="Guild &amp; Kelompok"
-            app:titleTextColor="@color/accent_gold"
+            app:titleTextColor="#FFD700"
             app:navigationIcon="@android:drawable/ic_menu_revert" />
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -26,20 +33,29 @@
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <!-- Pesan jika belum punya kelompok -->
-        <TextView
+        <FrameLayout
             android:id="@+id/tv_empty_party"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Kamu belum bergabung dengan kelompok manapun.\n\nTekan tombol di bawah untuk Memulai!"
-            android:gravity="center"
-            android:textColor="@color/text_secondary"
-            android:textSize="16sp"
+            android:layout_margin="24dp"
+            android:background="@drawable/common_popup_tips"
             android:visibility="gone"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"/>
+            app:layout_constraintBottom_toBottomOf="parent">
 
-        <!-- Daftar Kelompok -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="56dp"
+                android:layout_marginBottom="24dp"
+                android:layout_marginHorizontal="24dp"
+                android:text="Kamu belum bergabung dengan kelompok manapun.\n\nTekan tombol di bawah untuk Memulai!"
+                android:gravity="center"
+                android:textColor="#FFFFFF"
+                android:textSize="12sp"
+                android:lineSpacingExtra="4dp" />
+        </FrameLayout>
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rv_parties"
             android:layout_width="match_parent"
@@ -47,10 +63,8 @@
             android:clipToPadding="false"
             android:paddingTop="8dp"
             android:paddingBottom="100dp" />
-
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <!-- Tombol Mengambang (Floating Action Buttons) -->
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -78,5 +92,4 @@
             android:textColor="@color/black"
             app:backgroundTint="@color/accent_gold" />
     </LinearLayout>
-
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

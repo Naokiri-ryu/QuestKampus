@@ -19,6 +19,7 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 
+
 class PartyActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityPartyBinding

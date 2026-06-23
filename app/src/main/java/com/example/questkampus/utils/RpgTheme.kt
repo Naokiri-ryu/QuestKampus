@@ -1,17 +1,13 @@
 package com.example.questkampus.utils
 
 object RpgTheme {
-
-    fun maxExpForLevel(level: Int): Int {
-        // Scaling EXP eksponensial sederhana
-        return 100 * (level * level)
-    }
+    fun maxExpForLevel(level: Int): Int = 100 * (level * level)
 
     fun rankIcon(rank: String): String = when (rank.uppercase()) {
-        "S" -> "🐉"
-        "A" -> "⚔️"
-        "B" -> "🛡️"
-        "C" -> "🌿"
+        "S" -> "👑"
+        "A" -> "💎"
+        "B" -> "⚔️"
+        "C" -> "📜"
         else -> "❓"
     }
 
@@ -46,5 +42,35 @@ object RpgTheme {
         "A" -> "Kemenangan besar! '$title' berhasil diselesaikan."
         "B" -> "Bagus! Misi '$title' tuntas."
         else -> "Tugas '$title' telah selesai dikerjakan."
+    }
+
+    // 1. FUNGSI AUTO-RANK (ANTI CURANG)
+    fun calculateAutoRank(title: String, deadlineMillis: Long): String {
+        val timeLeft = deadlineMillis - System.currentTimeMillis()
+        val daysLeft = java.util.concurrent.TimeUnit.MILLISECONDS.toDays(timeLeft)
+        val titleLower = title.lowercase()
+
+        return when {
+            // Rank S: Tugas raksasa (UAS, Skripsi) ATAU waktu pengerjaan lebih dari 14 hari
+            titleLower.contains("uas") || titleLower.contains("skripsi") || daysLeft > 14 -> "S"
+            // Rank A: Tugas besar (UTS, Project) ATAU waktu pengerjaan 7-14 hari
+            titleLower.contains("uts") || titleLower.contains("project") || daysLeft in 7..14 -> "A"
+            // Rank B: Tugas menengah (Laporan, Makalah) ATAU waktu pengerjaan 3-6 hari
+            titleLower.contains("laporan") || titleLower.contains("makalah") || daysLeft in 3..6 -> "B"
+            // Rank C: Tugas harian/cepat
+            else -> "C"
+        }
+    }
+
+    // 2. FUNGSI PERINGKAT PETUALANG (USER RANK)
+    fun getUserRankString(level: Int): String {
+        return when {
+            level >= 100 -> "👑 Rank S (Legendary)"
+            level >= 75  -> "💎 Rank A (Mithril)"
+            level >= 50  -> "🥇 Rank B (Platinum)"
+            level >= 25  -> "🥈 Rank C (Gold)"
+            level >= 10  -> "🥉 Rank D (Silver)"
+            else         -> "🪵 Rank E (Novice)"
+        }
     }
 }

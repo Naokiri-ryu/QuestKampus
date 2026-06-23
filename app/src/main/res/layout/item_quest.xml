@@ -6,19 +6,20 @@
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="12dp"
     android:layout_marginVertical="5dp"
-    app:cardBackgroundColor="@color/rpg_card_surface"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="4dp"
-    app:strokeColor="@color/accent_gold"
-    app:strokeWidth="1dp"
+    app:cardBackgroundColor="@android:color/transparent"
+    app:cardElevation="0dp"
+    app:strokeWidth="0dp"
     android:foreground="?attr/selectableItemBackground">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="12dp">
+        android:background="@drawable/common_grid_bg"
+        android:paddingTop="20dp"
+        android:paddingBottom="28dp"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp">
 
-        <!-- Rank Badge -->
         <TextView
             android:id="@+id/tv_quest_rank"
             android:layout_width="40dp"
@@ -32,7 +33,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <!-- Quest Title -->
         <TextView
             android:id="@+id/tv_quest_title"
             android:layout_width="0dp"
@@ -46,33 +46,30 @@
             app:layout_constraintStart_toEndOf="@id/tv_quest_rank"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <!-- RPG Flavor / Quest type -->
         <TextView
             android:id="@+id/tv_quest_flavor"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
             android:text="🌿 Misi Pencarian"
-            android:textColor="@color/text_secondary"
+            android:textColor="#DDDDDD"
             android:textSize="11sp"
             app:layout_constraintEnd_toEndOf="@id/tv_quest_title"
             app:layout_constraintStart_toStartOf="@id/tv_quest_title"
             app:layout_constraintTop_toBottomOf="@id/tv_quest_title" />
 
-        <!-- Deadline -->
         <TextView
             android:id="@+id/tv_quest_deadline"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="3dp"
             android:text="📅 Deadline: -"
-            android:textColor="@color/text_secondary"
+            android:textColor="#FFD700"
             android:textSize="11sp"
             app:layout_constraintEnd_toEndOf="@id/tv_quest_title"
             app:layout_constraintStart_toStartOf="@id/tv_quest_title"
             app:layout_constraintTop_toBottomOf="@id/tv_quest_flavor" />
 
-        <!-- Status Badge (Selesai/Gagal) -->
         <TextView
             android:id="@+id/tv_status_badge"
             android:layout_width="wrap_content"

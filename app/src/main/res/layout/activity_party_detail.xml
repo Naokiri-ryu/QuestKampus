@@ -32,6 +32,15 @@
             android:padding="16dp"
             android:paddingBottom="80dp">
 
+            <!-- MONSTER RAKSASA -->
+            <ImageView
+                android:id="@+id/iv_party_visual"
+                android:layout_width="match_parent"
+                android:layout_height="280dp"
+                android:layout_marginBottom="16dp"
+                android:src="@drawable/boss_active"
+                android:scaleType="fitCenter" />
+
             <!-- Card Status Kelompok -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
@@ -71,7 +80,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
                         android:layout_marginBottom="4dp"
-                        android:text="NYAWA KELOMPOK (PARTY HP)"
+                        android:text="SISA HP MONSTER TUGAS"
                         android:textColor="@color/hp_red"
                         android:textSize="12sp"
                         android:textStyle="bold" />
@@ -132,7 +141,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="📜 Papan Misi Kelompok"
+                android:text="📜 Papan Misi Serangan"
                 android:textColor="@color/accent_gold"
                 android:textSize="18sp"
                 android:textStyle="bold" />
@@ -140,7 +149,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Siapapun bisa mengambil misi di bawah ini."
+                android:text="Selesaikan misi untuk melukai monster!"
                 android:textColor="@color/text_secondary"
                 android:textSize="12sp"
                 android:layout_marginBottom="8dp"/>
@@ -151,7 +160,6 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp" />
 
-            <!-- Tombol Selesai (Disembunyikan, akan muncul jika semua quest selesai) -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_disband_party"
                 android:layout_width="match_parent"
@@ -167,14 +175,13 @@
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
-    <!-- Tombol Buat Misi Kelompok -->
     <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
         android:id="@+id/fab_add_party_quest"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
-        android:text="BUAT MISI"
+        android:text="BUAT SERANGAN"
         app:icon="@android:drawable/ic_input_add"
         android:textColor="@color/black"
         app:backgroundTint="@color/accent_gold" />

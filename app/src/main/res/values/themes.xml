@@ -1,9 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.QuestKampus" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+    <style name="Base.Theme.QuestKampus" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">@color/accent_gold</item>
+        <item name="colorSecondary">@color/exp_blue</item>
+        <item name="android:statusBarColor">#0A0A0A</item>
+
+        <item name="android:fontFamily">@font/press_start_2p</item>
+        <item name="fontFamily">@font/press_start_2p</item>
+
+        <item name="textAppearanceBodyLarge">@style/TextAppearance.Pixel</item>
+        <item name="textAppearanceBodyMedium">@style/TextAppearance.Pixel</item>
+        <item name="textAppearanceBodySmall">@style/TextAppearance.Pixel</item>
+        <item name="textAppearanceTitleLarge">@style/TextAppearance.Pixel</item>
+        <item name="textAppearanceTitleMedium">@style/TextAppearance.Pixel</item>
+        <item name="textAppearanceTitleSmall">@style/TextAppearance.Pixel</item>
+        <item name="textAppearanceLabelLarge">@style/TextAppearance.Pixel</item>
+        <item name="textAppearanceLabelMedium">@style/TextAppearance.Pixel</item>
+        <item name="textAppearanceLabelSmall">@style/TextAppearance.Pixel</item>
+
+        <item name="materialButtonStyle">@style/PixelButton</item>
     </style>
 
     <style name="Theme.QuestKampus" parent="Base.Theme.QuestKampus" />
+
+    <style name="TextAppearance.Pixel" parent="TextAppearance.Material3.BodyMedium">
+        <item name="android:fontFamily">@font/press_start_2p</item>
+        <item name="fontFamily">@font/press_start_2p</item>
+    </style>
+
+    <style name="PixelButton" parent="Widget.Material3.Button">
+        <item name="android:fontFamily">@font/press_start_2p</item>
+        <item name="fontFamily">@font/press_start_2p</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+    </style>
 </resources>
